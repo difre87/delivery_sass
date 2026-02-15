@@ -33,11 +33,16 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $defaultRoute = $request->user()->companies()->exists()
-            ? 'dashboard'
-            : 'onboarding.company.create';
-
-        return redirect()->intended(route($defaultRoute, absolute: false));
+        $user = $request->user();
+        
+        // Si l'utilisateur a une société, rediriger vers le dashboard avec le slug
+        if ($user->companies()->exists()) {
+            $company = $user->currentCompany ?? $user->companies()->first();
+            return redirect()->intended(route('dashboard', ['company' => $company->slug], absolute: false));
+        }
+        
+        // Sinon, rediriger vers l'onboarding
+        return redirect()->intended(route('onboarding.company.create', absolute: false));
     }
 
     /**

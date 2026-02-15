@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import FormInput from '@/Components/FormInput';
@@ -12,6 +12,11 @@ export default function CompanySettings({ company, flash }) {
         company.logo ? `/storage/${company.logo}` : null
     );
 
+    const tabs = [
+        { name: 'Entreprise', href: route('settings.company'), current: true },
+        { name: 'Agences', href: route('settings.branches'), current: false },
+    ];
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: company.name || '',
         email: company.email || '',
@@ -23,8 +28,8 @@ export default function CompanySettings({ company, flash }) {
         tax_id: company.tax_id || '',
         registration_number: company.registration_number || '',
         website: company.website || '',
+        currency: company.currency || 'EUR',
         logo: null,
-        _method: 'POST',
     });
 
     const handleLogoChange = (e) => {
@@ -41,10 +46,18 @@ export default function CompanySettings({ company, flash }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
         post(route('settings.company.update'), {
             forceFormData: true,
+            preserveScroll: true,
+            transform: (data) => {
+                // Remove email from the data before sending
+                const { email, ...dataToSend } = data;
+                return dataToSend;
+            },
             onSuccess: () => {
-                // Keep the form data, just show success message
+                // Reload to get updated company data including in shared props
+                router.reload({ only: ['company'] });
             },
         });
     };
@@ -63,6 +76,27 @@ export default function CompanySettings({ company, flash }) {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    {/* Tabs Navigation */}
+                    <div className="mb-6">
+                        <nav className="flex space-x-4 border-b border-slate-200">
+                            {tabs.map((tab) => (
+                                <Link
+                                    key={tab.name}
+                                    href={tab.href}
+                                    className={`
+                                        px-4 py-2 text-sm font-medium border-b-2 transition-colors
+                                        ${tab.current
+                                            ? 'border-emerald-500 text-emerald-600'
+                                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                        }
+                                    `}
+                                >
+                                    {tab.name}
+                                </Link>
+                            ))}
+                        </nav>
+                    </div>
+
                     {flash?.success && (
                         <motion.div
                             initial={{ opacity: 0, y: -20 }}
@@ -176,6 +210,8 @@ export default function CompanySettings({ company, flash }) {
                                     onChange={(e) => setData('email', e.target.value)}
                                     error={errors.email}
                                     required
+                                    disabled
+                                    helperText="L'email est celui de votre compte utilisateur"
                                 />
                                 <FormInput
                                     label="Téléphone"
@@ -193,6 +229,59 @@ export default function CompanySettings({ company, flash }) {
                                     error={errors.website}
                                     placeholder="https://example.com"
                                 />
+                            </div>
+                        </motion.div>
+
+                        {/* Preferences */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.25 }}
+                            className="overflow-hidden bg-white shadow-lg sm:rounded-2xl"
+                        >
+                            <div className="relative overflow-hidden bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-6">
+                                <div className="absolute inset-0 bg-grid-white/10"></div>
+                                <div className="relative">
+                                    <Icons.Settings className="mb-2 h-8 w-8 text-white/90" />
+                                    <h3 className="text-xl font-semibold text-white">
+                                        Préférences
+                                    </h3>
+                                    <p className="mt-1 text-sm text-violet-100">
+                                        Paramètres régionaux et préférences d'affichage
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-6 p-6 md:grid-cols-2">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Devise
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                            <Icons.Currency className="h-5 w-5 text-slate-400" />
+                                        </div>
+                                        <select
+                                            value={data.currency}
+                                            onChange={(e) => setData('currency', e.target.value)}
+                                            className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                                        >
+                                            <option value="EUR">Euro (€) - EUR</option>
+                                            <option value="USD">Dollar américain ($) - USD</option>
+                                            <option value="GBP">Livre sterling (£) - GBP</option>
+                                            <option value="MAD">Dirham marocain (DH) - MAD</option>
+                                            <option value="CHF">Franc suisse (CHF) - CHF</option>
+                                            <option value="CAD">Dollar canadien ($) - CAD</option>
+                                            <option value="XOF">Franc CFA (FCFA) - XOF</option>
+                                        </select>
+                                    </div>
+                                    {errors.currency && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.currency}</p>
+                                    )}
+                                    <p className="mt-2 text-xs text-slate-500">
+                                        La devise utilisée pour l'affichage des montants
+                                    </p>
+                                </div>
                             </div>
                         </motion.div>
 

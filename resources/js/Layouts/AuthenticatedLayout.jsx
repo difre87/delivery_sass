@@ -1,4 +1,5 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import BranchSwitcher from '@/Components/BranchSwitcher';
 import Dropdown from '@/Components/Dropdown';
 import { Icons } from '@/Components/Icons';
 import { Link, usePage } from '@inertiajs/react';
@@ -267,6 +268,9 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="flex items-center gap-3">
+                            {/* Branch Switcher */}
+                            <BranchSwitcher />
+
                             {/* Notifications Button */}
                             <button
                                 type="button"

@@ -8,8 +8,10 @@ import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
 import FormSelect from '@/Components/FormSelect';
 import { Icons } from '@/Components/Icons';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function InvoicesIndex({ invoices, stats, filters }) {
+    const { format: formatCurrency } = useCurrency();
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
 
@@ -90,7 +92,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
             label: 'Montant',
             render: (invoice) => (
                 <span className="font-semibold text-gray-900">
-                    {parseFloat(invoice.total).toFixed(2)} €
+                    {formatCurrency(invoice.total)}
                 </span>
             )
         },
@@ -162,7 +164,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-blue-100">Total</p>
-                                    <p className="mt-2 text-3xl font-bold">{parseFloat(stats.total).toFixed(2)} €</p>
+                                    <p className="mt-2 text-3xl font-bold">{formatCurrency(stats.total)}</p>
                                 </div>
                                 <Icons.Currency className="h-12 w-12 text-blue-200" />
                             </div>
@@ -172,7 +174,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-green-100">Payé</p>
-                                    <p className="mt-2 text-3xl font-bold">{parseFloat(stats.paid).toFixed(2)} €</p>
+                                    <p className="mt-2 text-3xl font-bold">{formatCurrency(stats.paid)}</p>
                                 </div>
                                 <Icons.Check className="h-12 w-12 text-green-200" />
                             </div>
@@ -182,7 +184,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-amber-100">En attente</p>
-                                    <p className="mt-2 text-3xl font-bold">{parseFloat(stats.pending).toFixed(2)} €</p>
+                                    <p className="mt-2 text-3xl font-bold">{formatCurrency(stats.pending)}</p>
                                 </div>
                                 <Icons.Clock className="h-12 w-12 text-amber-200" />
                             </div>
@@ -192,7 +194,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-red-100">En retard</p>
-                                    <p className="mt-2 text-3xl font-bold">{parseFloat(stats.overdue).toFixed(2)} €</p>
+                                    <p className="mt-2 text-3xl font-bold">{formatCurrency(stats.overdue)}</p>
                                 </div>
                                 <Icons.Alert className="h-12 w-12 text-red-200" />
                             </div>

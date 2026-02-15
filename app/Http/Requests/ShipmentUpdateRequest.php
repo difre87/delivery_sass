@@ -38,7 +38,7 @@ class ShipmentUpdateRequest extends FormRequest
                     ->ignore($this->route('shipment')),
             ],
             'client_id' => [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('clients', 'id')
                     ->where(fn ($query) => $query->where('company_id', $this->user()->current_company_id)),

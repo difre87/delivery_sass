@@ -15,8 +15,9 @@ class CompanySettingsController extends Controller
         return Inertia::render('Settings/Company', [
             'company' => [
                 'name' => $company->name ?? '',
-                'email' => $company->email ?? '',
+                'email' => $request->user()->email ?? '',
                 'phone' => $company->phone ?? '',
+                'currency' => $company->currency ?? 'EUR',
                 'address' => $company->address ?? '',
                 'city' => $company->city ?? '',
                 'postal_code' => $company->postal_code ?? '',
@@ -35,8 +36,8 @@ class CompanySettingsController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'currency' => ['required', 'string', 'in:EUR,USD,GBP,MAD,CHF,CAD,XOF'],
             'address' => ['nullable', 'string', 'max:500'],
             'city' => ['nullable', 'string', 'max:100'],
             'postal_code' => ['nullable', 'string', 'max:20'],

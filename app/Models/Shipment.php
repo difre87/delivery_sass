@@ -42,6 +42,40 @@ class Shipment extends Model
     ];
 
     /**
+     * Bootstrap the model.
+     */
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (Shipment $shipment) {
+            if (empty($shipment->tracking_number)) {
+                $shipment->tracking_number = self::generateTrackingNumber($shipment->company_id);
+            }
+        });
+    }
+
+    /**
+     * Generate a unique tracking number.
+     */
+    private static function generateTrackingNumber(int $companyId): string
+    {
+        $year = date('Y');
+        $lastShipment = self::where('company_id', $companyId)
+            ->where('tracking_number', 'like', "TRK-{$year}-%")
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastShipment && preg_match('/TRK-\d{4}-(\d+)/', $lastShipment->tracking_number, $matches)) {
+            $nextNumber = (int) $matches[1] + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return sprintf('TRK-%s-%05d', $year, $nextNumber);
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

@@ -11,6 +11,7 @@ import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
 import Alert from '@/Components/Alert';
 import Badge from '@/Components/Badge';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const statusOptions = [
     { value: 'draft', label: 'Brouillon', color: 'slate' },
@@ -43,6 +44,7 @@ const getStatusConfig = (status) => {
 
 export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
     const flash = usePage().props.flash;
+    const { symbol } = useCurrency();
     const [editingShipmentId, setEditingShipmentId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -219,6 +221,36 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                 </div>
                                 <form onSubmit={submitCreate} className="p-6">
                                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                        <FormInput
+                                            label="N° de Suivi"
+                                            value={createForm.data.tracking_number}
+                                            onChange={(e) => createForm.setData('tracking_number', e.target.value)}
+                                            error={createForm.errors.tracking_number}
+                                            placeholder="Généré automatiquement"
+                                            disabled
+                                            className="bg-slate-50"
+                                        />
+
+                                        <FormSelect
+                                            label="Destinataire"
+                                            value={createForm.data.client_id}
+                                            onChange={(e) => {
+                                                const selectedClient = clients.find(c => c.id == e.target.value);
+                                                createForm.setData({
+                                                    ...createForm.data,
+                                                    client_id: e.target.value,
+                                                    recipient_name: selectedClient?.name || '',
+                                                    recipient_phone: selectedClient?.phone || '',
+                                                });
+                                            }}
+                                            error={createForm.errors.client_id}
+                                            required
+                                            options={[
+                                                { value: '', label: 'Sélectionner un client' },
+                                                ...clients.map(c => ({ value: c.id, label: `${c.name} ${c.phone ? '(' + c.phone + ')' : ''}` }))
+                                            ]}
+                                        />
+
                                         <FormSelect
                                             label="Agence"
                                             value={createForm.data.branch_id}
@@ -228,51 +260,6 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                                 { value: '', label: 'Aucune' },
                                                 ...branches.map(b => ({ value: b.id, label: b.name }))
                                             ]}
-                                        />
-
-                                        <FormInput
-                                            label="N° de Suivi"
-                                            value={createForm.data.tracking_number}
-                                            onChange={(e) => createForm.setData('tracking_number', e.target.value)}
-                                            error={createForm.errors.tracking_number}
-                                            placeholder="TRK-2024-XXXXX"
-                                        />
-
-                                        <FormSelect
-                                            label="Client"
-                                            value={createForm.data.client_id}
-                                            onChange={(e) => createForm.setData('client_id', e.target.value)}
-                                            error={createForm.errors.client_id}
-                                            options={[
-                                                { value: '', label: 'Sans client' },
-                                                ...clients.map(c => ({ value: c.id, label: c.name }))
-                                            ]}
-                                        />
-
-                                        <FormInput
-                                            label="Destinataire"
-                                            value={createForm.data.recipient_name}
-                                            onChange={(e) => createForm.setData('recipient_name', e.target.value)}
-                                            error={createForm.errors.recipient_name}
-                                            required
-                                            placeholder="Nom du destinataire"
-                                        />
-
-                                        <FormInput
-                                            label="Téléphone"
-                                            type="tel"
-                                            value={createForm.data.recipient_phone}
-                                            onChange={(e) => createForm.setData('recipient_phone', e.target.value)}
-                                            error={createForm.errors.recipient_phone}
-                                            placeholder="+33 6 12 34 56 78"
-                                        />
-
-                                        <FormInput
-                                            label="Référence"
-                                            value={createForm.data.reference}
-                                            onChange={(e) => createForm.setData('reference', e.target.value)}
-                                            error={createForm.errors.reference}
-                                            placeholder="REF-XXXXX"
                                         />
 
                                         <div className="md:col-span-2 lg:col-span-3">
@@ -313,7 +300,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                         />
 
                                         <FormInput
-                                            label="Coût (€)"
+                                            label={`Coût (${symbol})`}
                                             type="number"
                                             step="0.01"
                                             value={createForm.data.cost_cents ? (createForm.data.cost_cents / 100).toFixed(2) : ''}
@@ -323,7 +310,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                         />
 
                                         <FormInput
-                                            label="Prix (€)"
+                                            label={`Prix (${symbol})`}
                                             type="number"
                                             step="0.01"
                                             value={createForm.data.price_cents ? (createForm.data.price_cents / 100).toFixed(2) : ''}
@@ -384,6 +371,35 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                 </div>
                                 <form onSubmit={submitEdit} className="p-6">
                                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                        <FormInput
+                                            label="N° de Suivi"
+                                            value={editForm.data.tracking_number}
+                                            onChange={(e) => editForm.setData('tracking_number', e.target.value)}
+                                            error={editForm.errors.tracking_number}
+                                            disabled
+                                            className="bg-slate-50"
+                                        />
+
+                                        <FormSelect
+                                            label="Destinataire"
+                                            value={editForm.data.client_id}
+                                            onChange={(e) => {
+                                                const selectedClient = clients.find(c => c.id == e.target.value);
+                                                editForm.setData({
+                                                    ...editForm.data,
+                                                    client_id: e.target.value,
+                                                    recipient_name: selectedClient?.name || '',
+                                                    recipient_phone: selectedClient?.phone || '',
+                                                });
+                                            }}
+                                            error={editForm.errors.client_id}
+                                            required
+                                            options={[
+                                                { value: '', label: 'Sélectionner un client' },
+                                                ...clients.map(c => ({ value: c.id, label: `${c.name} ${c.phone ? '(' + c.phone + ')' : ''}` }))
+                                            ]}
+                                        />
+
                                         <FormSelect
                                             label="Agence"
                                             value={editForm.data.branch_id}
@@ -393,47 +409,6 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                                 { value: '', label: 'Aucune' },
                                                 ...branches.map(b => ({ value: b.id, label: b.name }))
                                             ]}
-                                        />
-
-                                        <FormInput
-                                            label="N° de Suivi"
-                                            value={editForm.data.tracking_number}
-                                            onChange={(e) => editForm.setData('tracking_number', e.target.value)}
-                                            error={editForm.errors.tracking_number}
-                                        />
-
-                                        <FormSelect
-                                            label="Client"
-                                            value={editForm.data.client_id}
-                                            onChange={(e) => editForm.setData('client_id', e.target.value)}
-                                            error={editForm.errors.client_id}
-                                            options={[
-                                                { value: '', label: 'Sans client' },
-                                                ...clients.map(c => ({ value: c.id, label: c.name }))
-                                            ]}
-                                        />
-
-                                        <FormInput
-                                            label="Destinataire"
-                                            value={editForm.data.recipient_name}
-                                            onChange={(e) => editForm.setData('recipient_name', e.target.value)}
-                                            error={editForm.errors.recipient_name}
-                                            required
-                                        />
-
-                                        <FormInput
-                                            label="Téléphone"
-                                            type="tel"
-                                            value={editForm.data.recipient_phone}
-                                            onChange={(e) => editForm.setData('recipient_phone', e.target.value)}
-                                            error={editForm.errors.recipient_phone}
-                                        />
-
-                                        <FormInput
-                                            label="Référence"
-                                            value={editForm.data.reference}
-                                            onChange={(e) => editForm.setData('reference', e.target.value)}
-                                            error={editForm.errors.reference}
                                         />
 
                                         <div className="md:col-span-2 lg:col-span-3">
@@ -472,7 +447,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                         />
 
                                         <FormInput
-                                            label="Coût (€)"
+                                            label={`Coût (${symbol})`}
                                             type="number"
                                             step="0.01"
                                             value={editForm.data.cost_cents ? (editForm.data.cost_cents / 100).toFixed(2) : ''}
@@ -481,7 +456,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                         />
 
                                         <FormInput
-                                            label="Prix (€)"
+                                            label={`Prix (${symbol})`}
                                             type="number"
                                             step="0.01"
                                             value={editForm.data.price_cents ? (editForm.data.price_cents / 100).toFixed(2) : ''}

@@ -6,8 +6,10 @@ import FormInput from '@/Components/FormInput';
 import FormSelect from '@/Components/FormSelect';
 import Button from '@/Components/Button';
 import { Icons } from '@/Components/Icons';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function CreateInvoice({ clients, shipments, invoice_number }) {
+    const { format: formatCurrency, symbol } = useCurrency();
     const { data, setData, post, processing, errors } = useForm({
         client_id: '',
         invoice_date: new Date().toISOString().split('T')[0],
@@ -244,7 +246,7 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                                 required
                                             />
                                             <FormInput
-                                                label="Prix unitaire (€)"
+                                                label={`Prix unitaire (${symbol})`}
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
@@ -258,7 +260,7 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                                     Total ligne
                                                 </label>
                                                 <div className="rounded-lg bg-gray-100 px-4 py-3 text-lg font-semibold text-gray-900">
-                                                    {(item.quantity * item.unit_price).toFixed(2)} €
+                                                    {formatCurrency(item.quantity * item.unit_price)}
                                                 </div>
                                             </div>
                                         </div>
@@ -279,20 +281,20 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                     <div className="flex items-center justify-between text-lg">
                                         <span className="font-medium text-gray-700">Sous-total :</span>
                                         <span className="font-semibold text-gray-900">
-                                            {calculateSubtotal().toFixed(2)} €
+                                            {formatCurrency(calculateSubtotal())}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-lg">
                                         <span className="font-medium text-gray-700">TVA ({data.tax_rate}%) :</span>
                                         <span className="font-semibold text-gray-900">
-                                            {calculateTax().toFixed(2)} €
+                                            {formatCurrency(calculateTax())}
                                         </span>
                                     </div>
                                     <div className="border-t-2 border-gray-200 pt-3">
                                         <div className="flex items-center justify-between text-2xl">
                                             <span className="font-bold text-gray-900">Total :</span>
                                             <span className="font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                                                {calculateTotal().toFixed(2)} €
+                                                {formatCurrency(calculateTotal())}
                                             </span>
                                         </div>
                                     </div>

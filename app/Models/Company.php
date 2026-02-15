@@ -24,6 +24,7 @@ class Company extends Model
         'logo_path',
         'status',
         'trial_ends_at',
+        'currency',
         'address',
         'city',
         'postal_code',

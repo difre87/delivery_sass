@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { Icons } from '@/Components/Icons';
 import Button from '@/Components/Button';
 import { useState } from 'react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function PlansIndex({ plans, currentSubscription, currentPlan }) {
+    const { formatCents } = useCurrency();
     const [selectedPlanId, setSelectedPlanId] = useState(null);
     const { post, processing } = useForm();
 
@@ -26,14 +28,6 @@ export default function PlansIndex({ plans, currentSubscription, currentPlan }) 
         } catch {
             return [];
         }
-    };
-
-    const formatPrice = (cents, currency = 'EUR') => {
-        const amount = cents / 100;
-        return new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: currency,
-        }).format(amount);
     };
 
     const getIntervalLabel = (interval) => {
@@ -72,7 +66,7 @@ export default function PlansIndex({ plans, currentSubscription, currentPlan }) 
                                 <p className="text-sm font-semibold text-emerald-600">Plan Actuel</p>
                                 <h3 className="mt-1 text-2xl font-bold text-emerald-900">{currentPlan.name}</h3>
                                 <p className="mt-1 text-sm text-emerald-700">
-                                    {formatPrice(currentPlan.price_cents, currentPlan.currency)}{getIntervalLabel(currentPlan.interval)}
+                                    {formatCents(currentPlan.price_cents)}{getIntervalLabel(currentPlan.interval)}
                                 </p>
                             </div>
                             <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 shadow-sm">
@@ -132,7 +126,7 @@ export default function PlansIndex({ plans, currentSubscription, currentPlan }) 
                                         <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
                                         <div className="mt-3 flex items-baseline gap-1">
                                             <span className="text-4xl font-bold text-slate-900">
-                                                {formatPrice(plan.price_cents, plan.currency).split(',')[0]}
+                                                {formatCents(plan.price_cents).split(',')[0]}
                                             </span>
                                             <span className="text-lg text-slate-600">{getIntervalLabel(plan.interval)}</span>
                                         </div>

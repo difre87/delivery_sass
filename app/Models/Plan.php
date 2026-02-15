@@ -20,6 +20,7 @@ class Plan extends Model
         'trial_days',
         'max_drivers',
         'max_vehicles',
+        'max_branches',
         'features',
         'is_active',
         'sort_order',

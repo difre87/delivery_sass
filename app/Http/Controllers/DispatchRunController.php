@@ -44,6 +44,11 @@ class DispatchRunController extends Controller
                 $query->where('companies.id', $company->id)
                       ->where('company_user.role', 'driver')
             )
+            ->with(['vehicleAssignments' => fn($query) => 
+                $query->whereNull('ends_at')
+                      ->with('vehicle:id,plate_number,make,model')
+                      ->latest()
+            ])
             ->orderBy('name')
             ->get(['users.id', 'users.name']);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Onboarding;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Company;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,8 +16,11 @@ class CompanyOnboardingController extends Controller
 {
     public function create(Request $request): Response|RedirectResponse
     {
-        if ($request->user()?->companies()->exists()) {
-            return redirect()->route('dashboard');
+        $user = $request->user();
+        
+        if ($user?->companies()->exists()) {
+            $company = $user->currentCompany ?? $user->companies()->first();
+            return redirect()->route('dashboard', ['company' => $company->slug]);
         }
 
         return Inertia::render('Onboarding/Company');
@@ -39,19 +43,36 @@ class CompanyOnboardingController extends Controller
             $suffix++;
         }
 
-        DB::transaction(function () use ($user, $validated, $slug): void {
+        $company = null;
+
+        DB::transaction(function () use ($user, $validated, $slug, &$company): void {
+            // Créer la société avec 14 jours d'essai
             $company = Company::create([
                 'name' => $validated['name'],
                 'slug' => $slug,
+                'trial_ends_at' => now()->addDays(14),
             ]);
 
             $company->users()->attach($user->id, ['role' => 'owner']);
 
+            // Créer une agence par défaut
+            $defaultBranch = Branch::create([
+                'company_id' => $company->id,
+                'name' => 'Siège Social',
+                'address' => null,
+                'phone' => null,
+                'email' => null,
+            ]);
+
+            // Assigner l'utilisateur à l'agence par défaut
+            $defaultBranch->users()->attach($user->id, ['is_default' => true]);
+
             $user->forceFill([
                 'current_company_id' => $company->id,
+                'current_branch_id' => $defaultBranch->id,
             ])->save();
         });
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard', ['company' => $company->slug]);
     }
 }

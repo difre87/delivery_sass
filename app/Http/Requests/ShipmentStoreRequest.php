@@ -37,7 +37,7 @@ class ShipmentStoreRequest extends FormRequest
                     ->where(fn ($query) => $query->where('company_id', $this->user()->current_company_id)),
             ],
             'client_id' => [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('clients', 'id')
                     ->where(fn ($query) => $query->where('company_id', $this->user()->current_company_id)),

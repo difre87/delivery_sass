@@ -38,7 +38,12 @@ class DatabaseSeeder extends Seeder
         $this->call(AddressSeeder::class);
         $this->command->newLine();
 
-        // 5. Chauffeurs
+        // 5. Agences
+        $this->command->info('🏢 Création des agences...');
+        $this->call(BranchSeeder::class);
+        $this->command->newLine();
+
+        // 6. Chauffeurs
         $this->command->info('🚗 Création des chauffeurs...');
         $this->call(DriverSeeder::class);
         $this->command->newLine();

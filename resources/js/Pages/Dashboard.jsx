@@ -1,19 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StatCard from '@/Components/StatCard';
 import MiniChart from '@/Components/MiniChart';
+import TrialBanner from '@/Components/TrialBanner';
 import { Icons } from '@/Components/Icons';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-
-const formatCurrency = (cents) => {
-    const amount = (cents ?? 0) / 100;
-
-    return new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'EUR',
-        maximumFractionDigits: 0,
-    }).format(amount);
-};
+import { useCurrency } from '@/hooks/useCurrency';
 
 const statusLabel = (value) => String(value ?? '').replaceAll('_', ' ');
 
@@ -24,6 +16,8 @@ const formatDateTime = (value) => {
 
 export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs }) {
     const { currentCompany, currentSubscription } = usePage().props.auth;
+    const { formatCents } = useCurrency();
+    
     const grossMargin = (kpis.revenue_month_cents ?? 0) - (kpis.cost_month_cents ?? 0);
     const marginRate = (kpis.revenue_month_cents ?? 0) > 0
         ? Math.round((grossMargin / kpis.revenue_month_cents) * 100)
@@ -91,6 +85,9 @@ export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs
             <Head title="Dashboard" />
 
             <div className="space-y-6">
+                {/* Trial Banner */}
+                <TrialBanner />
+
                 {/* Hero Section - Carte de bienvenue */}
                 <motion.section
                     initial={{ opacity: 0, y: 20 }}
@@ -150,7 +147,7 @@ export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs
                                     Rentabilité mensuelle
                                 </p>
                             </div>
-                            <p className="mt-4 text-4xl font-bold">{formatCurrency(grossMargin)}</p>
+                            <p className="mt-4 text-4xl font-bold">{formatCents(grossMargin)}</p>
                             <p className="mt-2 text-sm text-emerald-100">
                                 {marginRate}% de marge brute sur le CA livré
                             </p>
@@ -216,7 +213,7 @@ export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs
                             </div>
                             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Carburant</p>
-                                <p className="mt-2 text-3xl font-bold text-slate-900">{formatCurrency(kpis.fuel_cost_month_cents)}</p>
+                                <p className="mt-2 text-3xl font-bold text-slate-900">{formatCents(kpis.fuel_cost_month_cents)}</p>
                                 <div className="mt-2 flex items-center gap-1 text-xs text-amber-600">
                                     <Icons.TrendUp className="h-3 w-3" />
                                     <span>Budget surveillé</span>
@@ -224,7 +221,7 @@ export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs
                             </div>
                             <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 shadow-sm transition hover:shadow-md">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Marge brute</p>
-                                <p className="mt-2 text-3xl font-bold text-emerald-800">{formatCurrency(grossMargin)}</p>
+                                <p className="mt-2 text-3xl font-bold text-emerald-800">{formatCents(grossMargin)}</p>
                                 <div className="mt-2 flex items-center gap-1 text-xs text-emerald-600">
                                     <Icons.Check className="h-3 w-3" />
                                     <span>Objectif atteint</span>
@@ -374,7 +371,7 @@ export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs
                                                 </p>
                                             </div>
                                         </div>
-                                        <p className="text-lg font-bold text-slate-900">{formatCurrency(fuelLog.total_cents)}</p>
+                                        <p className="text-lg font-bold text-slate-900">{formatCents(fuelLog.total_cents)}</p>
                                     </motion.div>
                                 ))
                             )}

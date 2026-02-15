@@ -217,13 +217,27 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                                         <FormSelect
                                             label="Chauffeur"
                                             value={createForm.data.driver_id}
-                                            onChange={(e) => createForm.setData('driver_id', e.target.value)}
+                                            onChange={(e) => {
+                                                const driverId = e.target.value;
+                                                const selectedDriver = drivers.find(d => d.id == driverId);
+                                                const assignedVehicle = selectedDriver?.vehicle_assignments?.[0]?.vehicle;
+                                                
+                                                createForm.setData({
+                                                    ...createForm.data,
+                                                    driver_id: driverId,
+                                                    vehicle_id: assignedVehicle?.id || ''
+                                                });
+                                            }}
                                             error={createForm.errors.driver_id}
                                             required
                                             icon={Icons.Drivers}
                                             options={[
                                                 { value: '', label: 'Choisir un chauffeur' },
-                                                ...drivers.map(d => ({ value: d.id, label: d.name }))
+                                                ...drivers.map(d => {
+                                                    const vehicle = d.vehicle_assignments?.[0]?.vehicle;
+                                                    const vehicleInfo = vehicle ? ` - ${vehicle.plate_number}` : ' (sans véhicule)';
+                                                    return { value: d.id, label: `${d.name}${vehicleInfo}` };
+                                                })
                                             ]}
                                         />
 
@@ -233,6 +247,8 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                                             onChange={(e) => createForm.setData('vehicle_id', e.target.value)}
                                             error={createForm.errors.vehicle_id}
                                             icon={Icons.Fleet}
+                                            disabled
+                                            className="bg-slate-50"
                                             options={[
                                                 { value: '', label: 'Aucun véhicule' },
                                                 ...vehicles.map(v => ({ value: v.id, label: v.plate_number }))
@@ -301,42 +317,13 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                     )}
                 </AnimatePresence>
 
-                {/* Data Table */}
-                <DataTable
-                    columns={columns}
-                    data={rows}
-                    emptyMessage="Aucune tournée enregistrée. Créez votre première tournée !"
-                    emptyIcon={Icons.Routes}
-                    actions={(run) => (
-                        <>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => startEdit(run)}
-                            >
-                                Modifier
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="danger"
-                                onClick={() => deleteRun(run)}
-                            >
-                                Supprimer
-                            </Button>
-                        </>
-                    )}
-                />
-
-                {/* Pagination */}
-                {pagination.length > 0 && <Pagination links={pagination} />}
-
                 {/* Edit Form */}
                 <AnimatePresence>
                     {editingRunId && (
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
                         >
                             <div className="overflow-hidden rounded-2xl border border-rose-200 bg-gradient-to-br from-white to-rose-50/30 shadow-lg">
@@ -360,13 +347,27 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                                         <FormSelect
                                             label="Chauffeur"
                                             value={editForm.data.driver_id}
-                                            onChange={(e) => editForm.setData('driver_id', e.target.value)}
+                                            onChange={(e) => {
+                                                const driverId = e.target.value;
+                                                const selectedDriver = drivers.find(d => d.id == driverId);
+                                                const assignedVehicle = selectedDriver?.vehicle_assignments?.[0]?.vehicle;
+                                                
+                                                editForm.setData({
+                                                    ...editForm.data,
+                                                    driver_id: driverId,
+                                                    vehicle_id: assignedVehicle?.id || ''
+                                                });
+                                            }}
                                             error={editForm.errors.driver_id}
                                             required
                                             icon={Icons.Drivers}
                                             options={[
                                                 { value: '', label: 'Choisir un chauffeur' },
-                                                ...drivers.map(d => ({ value: d.id, label: d.name }))
+                                                ...drivers.map(d => {
+                                                    const vehicle = d.vehicle_assignments?.[0]?.vehicle;
+                                                    const vehicleInfo = vehicle ? ` - ${vehicle.plate_number}` : ' (sans véhicule)';
+                                                    return { value: d.id, label: `${d.name}${vehicleInfo}` };
+                                                })
                                             ]}
                                         />
 
@@ -376,6 +377,8 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                                             onChange={(e) => editForm.setData('vehicle_id', e.target.value)}
                                             error={editForm.errors.vehicle_id}
                                             icon={Icons.Fleet}
+                                            disabled
+                                            className="bg-slate-50"
                                             options={[
                                                 { value: '', label: 'Aucun véhicule' },
                                                 ...vehicles.map(v => ({ value: v.id, label: v.plate_number }))
@@ -443,6 +446,35 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {/* Data Table */}
+                <DataTable
+                    columns={columns}
+                    data={rows}
+                    emptyMessage="Aucune tournée enregistrée. Créez votre première tournée !"
+                    emptyIcon={Icons.Routes}
+                    actions={(run) => (
+                        <>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => startEdit(run)}
+                            >
+                                Modifier
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="danger"
+                                onClick={() => deleteRun(run)}
+                            >
+                                Supprimer
+                            </Button>
+                        </>
+                    )}
+                />
+
+                {/* Pagination */}
+                {pagination.length > 0 && <Pagination links={pagination} />}
             </div>
         </AuthenticatedLayout>
     );

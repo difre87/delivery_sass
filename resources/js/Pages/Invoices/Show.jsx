@@ -5,8 +5,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Badge from '@/Components/Badge';
 import Button from '@/Components/Button';
 import { Icons } from '@/Components/Icons';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function ShowInvoice({ invoice }) {
+    const { format: formatCurrency } = useCurrency();
     const getStatusBadge = (status) => {
         const variants = {
             draft: 'default',
@@ -229,10 +231,10 @@ export default function ShowInvoice({ invoice }) {
                                                             {item.quantity}
                                                         </td>
                                                         <td className="py-4 text-right text-sm text-gray-900">
-                                                            {parseFloat(item.unit_price).toFixed(2)} €
+                                                            {formatCurrency(item.unit_price)}
                                                         </td>
                                                         <td className="py-4 text-right font-medium text-gray-900">
-                                                            {parseFloat(item.total).toFixed(2)} €
+                                                            {formatCurrency(item.total)}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -244,7 +246,7 @@ export default function ShowInvoice({ invoice }) {
                                         <div className="flex justify-between text-sm">
                                             <span className="font-medium text-gray-700">Sous-total :</span>
                                             <span className="font-semibold text-gray-900">
-                                                {parseFloat(invoice.subtotal).toFixed(2)} €
+                                                {formatCurrency(invoice.subtotal)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between text-sm">
@@ -252,13 +254,13 @@ export default function ShowInvoice({ invoice }) {
                                                 TVA ({invoice.tax_rate}%) :
                                             </span>
                                             <span className="font-semibold text-gray-900">
-                                                {parseFloat(invoice.tax_amount).toFixed(2)} €
+                                                {formatCurrency(invoice.tax_amount)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between border-t-2 border-gray-200 pt-2 text-xl">
                                             <span className="font-bold text-gray-900">Total :</span>
                                             <span className="font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                                                {parseFloat(invoice.total).toFixed(2)} €
+                                                {formatCurrency(invoice.total)}
                                             </span>
                                         </div>
                                     </div>

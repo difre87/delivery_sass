@@ -28,6 +28,7 @@ class User extends Authenticatable
         'type',
         'is_active',
         'current_company_id',
+        'current_branch_id',
     ];
 
     /**
@@ -70,6 +71,24 @@ class User extends Authenticatable
     public function currentCompany(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'current_company_id');
+    }
+
+    /**
+     * @return BelongsToMany<Branch, $this>
+     */
+    public function branches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class)
+            ->withPivot('is_default')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return BelongsTo<Branch, $this>
+     */
+    public function currentBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'current_branch_id');
     }
 
     /**

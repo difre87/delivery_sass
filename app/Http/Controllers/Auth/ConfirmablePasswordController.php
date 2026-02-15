@@ -36,6 +36,13 @@ class ConfirmablePasswordController extends Controller
 
         $request->session()->put('auth.password_confirmed_at', time());
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+        $company = $user->currentCompany ?? $user->companies()->first();
+        
+        if ($company) {
+            return redirect()->intended(route('dashboard', ['company' => $company->slug], absolute: false));
+        }
+        
+        return redirect()->intended(route('onboarding.company.create', absolute: false));
     }
 }

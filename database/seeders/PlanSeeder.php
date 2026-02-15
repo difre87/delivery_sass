@@ -22,6 +22,7 @@ class PlanSeeder extends Seeder
                 'trial_days' => 14,
                 'max_drivers' => 5,
                 'max_vehicles' => 20,
+                'max_branches' => 1,
                 'features' => [
                     'Gestion des clients',
                     'Gestion des envois (basique)',
@@ -32,6 +33,7 @@ class PlanSeeder extends Seeder
                     'Max 5 utilisateurs',
                     'Max 100 envois/mois',
                     'Max 50 clients',
+                    '1 agence',
                 ],
                 'sort_order' => 1,
             ],
@@ -44,6 +46,7 @@ class PlanSeeder extends Seeder
                 'trial_days' => 14,
                 'max_drivers' => 20,
                 'max_vehicles' => 50,
+                'max_branches' => 3,
                 'features' => [
                     'Tout Starter +',
                     'Gestion des envois (avancée)',
@@ -57,6 +60,7 @@ class PlanSeeder extends Seeder
                     'Max 15 utilisateurs',
                     'Max 500 envois/mois',
                     'Max 200 clients',
+                    'Jusqu\'à 3 agences',
                 ],
                 'sort_order' => 2,
             ],
@@ -69,6 +73,7 @@ class PlanSeeder extends Seeder
                 'trial_days' => 30,
                 'max_drivers' => null,
                 'max_vehicles' => null,
+                'max_branches' => null,
                 'features' => [
                     '✨ TOUS les modules inclus',
                     'Utilisateurs illimités',
@@ -76,6 +81,7 @@ class PlanSeeder extends Seeder
                     'Chauffeurs illimités',
                     'Envois illimités',
                     'Clients illimités',
+                    'Agences illimitées',
                     'Tournées optimisées (IA)',
                     'Suivi GPS temps réel',
                     'Rapports personnalisés',

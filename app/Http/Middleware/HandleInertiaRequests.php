@@ -32,11 +32,25 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $subscription = $user?->currentCompany?->currentSubscription();
 
+        // Charger les agences de l'utilisateur avec l'agence courante
+        $userBranches = $user && $user->current_company_id
+            ? $user->branches()
+                ->where('branches.company_id', $user->current_company_id)
+                ->select('branches.id', 'branches.name')
+                ->get()
+            : collect();
+
+        $currentBranch = $user && $user->current_branch_id
+            ? $user->currentBranch?->only(['id', 'name'])
+            : null;
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
-                'currentCompany' => $user?->currentCompany?->only(['id', 'name', 'slug']),
+                'currentCompany' => $user?->currentCompany?->only(['id', 'name', 'slug', 'trial_ends_at', 'currency']),
+                'currentBranch' => $currentBranch,
+                'userBranches' => $userBranches,
                 'currentSubscription' => $subscription
                     ? [
                         ...$subscription->only([

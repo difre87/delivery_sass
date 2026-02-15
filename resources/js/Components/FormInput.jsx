@@ -4,6 +4,7 @@ export default function FormInput({
     label, 
     error, 
     icon: Icon, 
+    helperText,
     className = '', 
     ...props 
 }) {
@@ -46,6 +47,11 @@ export default function FormInput({
                     </svg>
                     {error}
                 </motion.p>
+            )}
+            {helperText && !error && (
+                <p className="mt-2 text-xs text-slate-500">
+                    {helperText}
+                </p>
             )}
         </div>
     );

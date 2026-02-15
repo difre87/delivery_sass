@@ -10,6 +10,7 @@ import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
 import Alert from '@/Components/Alert';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const initialForm = {
     vehicle_id: '',
@@ -25,6 +26,7 @@ const initialForm = {
 
 export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
     const flash = usePage().props.flash;
+    const { formatCents, symbol } = useCurrency();
     const [editingFuelLogId, setEditingFuelLogId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     
@@ -136,10 +138,7 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                 <div className="flex items-center gap-1">
                     <Icons.Currency className="h-4 w-4 text-slate-400" />
                     <span className="font-semibold text-slate-900">
-                        {(log.total_cents / 100).toLocaleString('fr-FR', { 
-                            style: 'currency', 
-                            currency: 'EUR' 
-                        })}
+                        {formatCents(log.total_cents)}
                     </span>
                 </div>
             )
@@ -151,7 +150,7 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                 const pricePerLiter = log.total_cents / 100 / parseFloat(log.volume_liters);
                 return (
                     <span className="text-sm text-slate-600">
-                        {pricePerLiter.toFixed(3)} €/L
+                        {pricePerLiter.toFixed(3)} {symbol}/L
                     </span>
                 );
             }
@@ -227,7 +226,7 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-600">Coût Total</p>
-                                    <p className="text-xl font-bold text-slate-900">{stats.totalCost} €</p>
+                                    <p className="text-xl font-bold text-slate-900">{stats.totalCost} {symbol}</p>
                                 </div>
                             </div>
                         </div>
@@ -239,7 +238,7 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-600">Prix Moyen/L</p>
-                                    <p className="text-xl font-bold text-slate-900">{stats.avgPricePerLiter} €</p>
+                                    <p className="text-xl font-bold text-slate-900">{stats.avgPricePerLiter} {symbol}</p>
                                 </div>
                             </div>
                         </div>
@@ -334,7 +333,7 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                                         />
 
                                         <FormInput
-                                            label="Montant (€)"
+                                            label={`Montant (${symbol})`}
                                             type="number"
                                             step="0.01"
                                             min="0"
@@ -497,7 +496,7 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                                         />
 
                                         <FormInput
-                                            label="Montant (€)"
+                                            label={`Montant (${symbol})`}
                                             type="number"
                                             step="0.01"
                                             min="0"
