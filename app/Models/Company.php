@@ -127,11 +127,27 @@ class Company extends Model
     }
 
     /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
      * @return HasMany<DeliveryRoute, $this>
      */
     public function deliveryRoutes(): HasMany
     {
         return $this->hasMany(DeliveryRoute::class);
+    }
+
+    /**
+     * @return HasMany<DispatchRun, $this>
+     */
+    public function dispatchRuns(): HasMany
+    {
+        return $this->hasMany(DispatchRun::class);
     }
 
     /**

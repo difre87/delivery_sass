@@ -7,7 +7,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useCurrency } from '@/hooks/useCurrency';
 
-const statusLabel = (value) => String(value ?? '').replaceAll('_', ' ');
+const statusLabel = (value) => String(value ?? '').replace(/_/g, ' ');
 
 const formatDateTime = (value) => {
     if (!value) return 'Date non définie';
@@ -15,7 +15,8 @@ const formatDateTime = (value) => {
 };
 
 export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs }) {
-    const { currentCompany, currentSubscription } = usePage().props.auth;
+    const page = usePage<any>();
+    const { currentCompany, currentSubscription } = page.props.auth;
     const { formatCents } = useCurrency();
     
     const grossMargin = (kpis.revenue_month_cents ?? 0) - (kpis.cost_month_cents ?? 0);
@@ -55,10 +56,10 @@ export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs
     ];
 
     const quickLinks = [
-        { label: 'Nouveau client', href: route('clients.index') },
-        { label: 'Nouvelle livraison', href: route('shipments.index') },
-        { label: 'Planifier tournée', href: route('routes.index') },
-        { label: 'Ajouter livreur', href: route('drivers.index') },
+        { label: 'Nouveau client', href: route('clients.index', { company: currentCompany?.slug }) },
+        { label: 'Nouvelle livraison', href: route('shipments.index', { company: currentCompany?.slug }) },
+        { label: 'Planifier tournée', href: route('routes.index', { company: currentCompany?.slug }) },
+        { label: 'Ajouter livreur', href: route('drivers.index', { company: currentCompany?.slug }) },
     ];
 
     // Données simulées pour le graphique (à remplacer par de vraies données)
@@ -278,7 +279,7 @@ export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs
                                 <h3 className="text-base font-bold text-slate-900">Dernières livraisons</h3>
                             </div>
                             <Link
-                                href={route('shipments.index')}
+                                href={route('shipments.index', { company: currentCompany?.slug })}
                                 className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
                             >
                                 Voir tout →
@@ -335,7 +336,7 @@ export default function Dashboard({ stats, kpis, recentShipments, recentFuelLogs
                                 <h3 className="text-base font-bold text-slate-900">Derniers pleins carburant</h3>
                             </div>
                             <Link
-                                href={route('fuel.index')}
+                                href={route('fuel.index', { company: currentCompany?.slug })}
                                 className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
                             >
                                 Voir tout →

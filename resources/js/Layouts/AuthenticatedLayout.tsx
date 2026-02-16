@@ -7,66 +7,75 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
-    const { user, currentCompany } = usePage().props.auth;
+    const page = usePage<any>();
+    const { user, currentCompany } = page.props.auth;
+    const companySlug = currentCompany?.slug;
+    
     const navigation = [
         {
             name: 'Dashboard',
-            href: route('dashboard'),
+            href: route('dashboard', { company: companySlug }),
             active: route().current('dashboard'),
             icon: Icons.Dashboard,
         },
         {
+            name: 'Analytics',
+            href: route('analytics.index', { company: companySlug }),
+            active: route().current('analytics.*'),
+            icon: Icons.BarChart,
+        },
+        {
             name: 'Clients',
-            href: route('clients.index'),
+            href: route('clients.index', { company: companySlug }),
             active: route().current('clients.*'),
             icon: Icons.Clients,
         },
         {
             name: 'Livreurs',
-            href: route('drivers.index'),
+            href: route('drivers.index', { company: companySlug }),
             active: route().current('drivers.*'),
             icon: Icons.Drivers,
         },
         {
             name: 'Livraisons',
-            href: route('shipments.index'),
+            href: route('shipments.index', { company: companySlug }),
             active: route().current('shipments.*'),
             icon: Icons.Shipments,
         },
         {
             name: 'Tournées',
-            href: route('routes.index'),
+            href: route('routes.index', { company: companySlug }),
             active: route().current('routes.*'),
             icon: Icons.Routes,
         },
         {
             name: 'Flotte',
-            href: route('fleet.index'),
+            href: route('fleet.index', { company: companySlug }),
             active: route().current('fleet.*'),
             icon: Icons.Fleet,
         },
         {
             name: 'Carburant',
-            href: route('fuel.index'),
+            href: route('fuel.index', { company: companySlug }),
             active: route().current('fuel.*'),
             icon: Icons.Fuel,
         },
         {
             name: 'Factures',
-            href: route('invoices.index'),
+            href: route('invoices.index', { company: companySlug }),
             active: route().current('invoices.*'),
             icon: Icons.FileText,
         },
         {
             name: 'Bordereaux',
-            href: route('waybills.index'),
+            href: route('waybills.index', { company: companySlug }),
             active: route().current('waybills.*'),
             icon: Icons.Clipboard,
         },
         
         {
             name: 'Paramètres',
-            href: route('settings.company'),
+            href: route('settings.company', { company: companySlug }),
             active: route().current('settings.*'),
             icon: Icons.Settings,
         },
@@ -78,7 +87,7 @@ export default function AuthenticatedLayout({ header, children }) {
         },
         {
             name: 'Upgrade Plan',
-            href: route('plans.index'),
+            href: route('plans.index', { company: companySlug }),
             active: route().current('plans.*'),
             icon: Icons.Currency,
             badge: 'Pro',
@@ -333,7 +342,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                             <span>Mon Profil</span>
                                         </Dropdown.Link>
                                         
-                                        <Dropdown.Link href={route('settings.company')}>
+                                        <Dropdown.Link href={route('settings.company', { company: companySlug })}>
                                             <svg className="h-4 w-4 text-slate-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

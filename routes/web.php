@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Onboarding\CompanyOnboardingController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppPlaceholderController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DispatchRunController;
@@ -60,6 +61,19 @@ Route::get('/', function () {
     ]);
 });
 
+// Legal pages
+Route::get('/legal/terms', function () {
+    return Inertia::render('Legal/TermsOfService');
+})->name('legal.terms');
+
+Route::get('/legal/notice', function () {
+    return Inertia::render('Legal/LegalNotice');
+})->name('legal.notice');
+
+Route::get('/legal/privacy', function () {
+    return Inertia::render('Legal/PrivacyPolicy');
+})->name('legal.privacy');
+
 Route::middleware('auth')->group(function () {
     // Onboarding routes (sans préfixe company)
     Route::get('/onboarding/company', [CompanyOnboardingController::class, 'create'])
@@ -72,6 +86,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', DashboardController::class)
             ->middleware('verified')
             ->name('dashboard');
+        
+        // Analytics
+        Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
         
         // Clients
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');

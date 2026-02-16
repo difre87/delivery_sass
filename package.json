@@ -27,6 +27,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
-        "framer-motion": "^12.34.0"
+        "framer-motion": "^12.34.0",
+        "swiper": "^12.1.1"
     }
 }
