@@ -25,6 +25,12 @@ export default function AuthenticatedLayout({ header, children }) {
             icon: Icons.BarChart,
         },
         {
+            name: 'Tracking GPS',
+            href: route('tracking.index', { company: companySlug }),
+            active: route().current('tracking.*'),
+            icon: Icons.MapPin,
+        },
+        {
             name: 'Clients',
             href: route('clients.index', { company: companySlug }),
             active: route().current('clients.*'),
@@ -79,12 +85,12 @@ export default function AuthenticatedLayout({ header, children }) {
             active: route().current('settings.*'),
             icon: Icons.Settings,
         },
-        {
+        /* {
             name: 'Profil',
             href: route('profile.edit'),
             active: route().current('profile.*'),
             icon: Icons.Profile,
-        },
+        }, */
         {
             name: 'Upgrade Plan',
             href: route('plans.index', { company: companySlug }),

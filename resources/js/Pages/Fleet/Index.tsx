@@ -4,7 +4,8 @@ import FormSelect from '@/Components/FormSelect';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
-import Alert from '@/Components/Alert';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import Toast from '@/Components/Toast';
 import Badge from '@/Components/Badge';
 import { Icons } from '@/Components/Icons';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -37,9 +38,11 @@ const initialForm = {
 };
 
 export default function FleetIndex({ vehicles, branches = [] }) {
-    const flash = usePage().props.flash;
+    const flash = usePage<any>().props.flash;
+    const currentCompany = usePage<any>().props.auth.currentCompany;
     const [editingVehicleId, setEditingVehicleId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [deletingVehicle, setDeletingVehicle] = useState<any>(null);
 
     const createForm = useForm(initialForm);
     const editForm = useForm(initialForm);
@@ -91,8 +94,14 @@ export default function FleetIndex({ vehicles, branches = [] }) {
     };
 
     const deleteVehicle = (vehicle) => {
-        if (!confirm(`Supprimer le véhicule "${vehicle.plate_number}" ?`)) return;
-        router.delete(route('fleet.destroy', vehicle.id));
+        setDeletingVehicle(vehicle);
+    };
+
+    const confirmDelete = () => {
+        if (deletingVehicle) {
+            router.delete(route('fleet.destroy', deletingVehicle.id));
+            setDeletingVehicle(null);
+        }
     };
 
     const columns = [
@@ -166,7 +175,7 @@ export default function FleetIndex({ vehicles, branches = [] }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <a
-                            href={route('export.vehicles')}
+                            href={route('export.vehicles', { company: currentCompany.slug })}
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
                             <Icons.Download className="h-4 w-4" />
@@ -189,7 +198,16 @@ export default function FleetIndex({ vehicles, branches = [] }) {
             <Head title="Flotte" />
 
             <div className="space-y-6">
-                {flash?.status && <Alert type="success" message={flash.status} />}
+                {/* Flash Message Toast */}
+                <AnimatePresence>
+                    {flash?.status && (
+                        <Toast 
+                            message={flash.status} 
+                            type="success"
+                            onClose={() => router.reload({ only: [] })}
+                        />
+                    )}
+                </AnimatePresence>
 
                 <AnimatePresence>
                     {showCreateForm && (
@@ -433,6 +451,17 @@ export default function FleetIndex({ vehicles, branches = [] }) {
                     )}
                 </motion.section>
             </div>
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={!!deletingVehicle}
+                title="Supprimer le véhicule"
+                message={deletingVehicle ? `Êtes-vous sûr de vouloir supprimer le véhicule "${deletingVehicle.plate_number}" ? Cette action est irréversible.` : ''}
+                confirmText="Supprimer"
+                onConfirm={confirmDelete}
+                onCancel={() => setDeletingVehicle(null)}
+            />
         </AuthenticatedLayout>
     );
 }
+

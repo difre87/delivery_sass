@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import DataTable from '@/Components/DataTable';
@@ -10,6 +10,8 @@ import FormSelect from '@/Components/FormSelect';
 import { Icons } from '@/Components/Icons';
 
 export default function WaybillsIndex({ waybills, stats, filters }) {
+    const page = usePage<any>();
+    const { currentCompany } = page.props.auth;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
 
@@ -43,7 +45,7 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
     };
 
     const handleSearch = () => {
-        router.get(route('waybills.index'), 
+        router.get(route('waybills.index', { company: currentCompany.slug }), 
             { search, status },
             { preserveState: true, preserveScroll: true }
         );
@@ -51,7 +53,7 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
 
     const handleDelete = (waybill) => {
         if (confirm('Êtes-vous sûr de vouloir supprimer ce bordereau ?')) {
-            router.delete(route('waybills.destroy', waybill.id));
+            router.delete(route('waybills.destroy', { company: currentCompany.slug, waybillId: waybill.id }));
         }
     };
 
@@ -61,7 +63,7 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
             label: 'Numéro', 
             render: (waybill) => (
                 <Link
-                    href={route('waybills.show', waybill.id)}
+                    href={route('waybills.show', { company: currentCompany.slug, waybillId: waybill.id })}
                     className="font-semibold text-purple-600 hover:text-purple-700"
                 >
                     {waybill.number}
@@ -127,13 +129,13 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
             render: (waybill) => (
                 <div className="flex items-center space-x-2">
                     <Link
-                        href={route('waybills.show', waybill.id)}
+                        href={route('waybills.show', { company: currentCompany.slug, waybillId: waybill.id })}
                         className="text-purple-600 hover:text-purple-700"
                     >
                         <Icons.Eye className="h-5 w-5" />
                     </Link>
                     <a
-                        href={route('waybills.pdf', waybill.id)}
+                        href={route('waybills.pdf', { company: currentCompany.slug, waybillId: waybill.id })}
                         target="_blank"
                         className="text-blue-600 hover:text-blue-700"
                     >
@@ -159,13 +161,13 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
                     </h2>
                     <div className="flex items-center gap-3">
                         <a
-                            href={route('export.waybills')}
+                            href={route('export.waybills', { company: currentCompany.slug })}
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
                             <Icons.Download className="h-4 w-4" />
                             <span>Exporter CSV</span>
                         </a>
-                        <Link href={route('waybills.create')}>
+                        <Link href={route('waybills.create', { company: currentCompany.slug })}>
                             <Button
                                 variant="primary"
                                 icon={Icons.Plus}
@@ -245,6 +247,8 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
                                 onChange={(e) => setSearch(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                 icon={Icons.Search}
+                                error={null}
+                                helperText={null}
                             />
                             <FormSelect
                                 label="Statut"
@@ -252,9 +256,10 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
                                 onChange={(e) => setStatus(e.target.value)}
                                 options={statusOptions}
                                 icon={Icons.Filter}
+                                error={null}
                             />
                             <div className="flex items-end">
-                                <Button onClick={handleSearch} className="w-full">
+                                <Button onClick={handleSearch} className="w-full" icon={null}>
                                     Filtrer
                                 </Button>
                             </div>
@@ -272,6 +277,7 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
                             data={waybills.data}
                             emptyIcon={Icons.Clipboard}
                             emptyMessage="Aucun bordereau trouvé"
+                            actions={null}
                         />
 
                         {/* Pagination */}

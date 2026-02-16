@@ -9,7 +9,8 @@ import FormSelect from '@/Components/FormSelect';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
-import Alert from '@/Components/Alert';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import Toast from '@/Components/Toast';
 import Badge from '@/Components/Badge';
 import { useCurrency } from '@/hooks/useCurrency';
 
@@ -43,10 +44,12 @@ const getStatusConfig = (status) => {
 };
 
 export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
-    const flash = usePage().props.flash;
+    const flash = usePage<any>().props.flash;
+    const currentCompany = usePage<any>().props.auth.currentCompany;
     const { symbol } = useCurrency();
     const [editingShipmentId, setEditingShipmentId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [deletingShipment, setDeletingShipment] = useState<any>(null);
 
     const createForm = useForm(initialForm);
     const editForm = useForm(initialForm);
@@ -98,8 +101,14 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
     };
 
     const deleteShipment = (shipment) => {
-        if (!confirm(`Supprimer la livraison "${shipment.reference || `EXP-${shipment.id}`}" ?`)) return;
-        router.delete(route('shipments.destroy', shipment.id));
+        setDeletingShipment(shipment);
+    };
+
+    const confirmDelete = () => {
+        if (deletingShipment) {
+            router.delete(route('shipments.destroy', deletingShipment.id));
+            setDeletingShipment(null);
+        }
     };
 
     const columns = [
@@ -153,7 +162,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
             label: 'Statut',
             render: (shipment) => {
                 const config = getStatusConfig(shipment.status);
-                return <Badge color={config.color}>{config.label}</Badge>;
+                return <Badge variant={config.color}>{config.label}</Badge>;
             }
         },
         { 
@@ -171,7 +180,13 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
     ];
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                    Livraisons
+                </h2>
+            }
+        >
             <Head title="Livraisons" />
 
             <div className="space-y-6">
@@ -190,7 +205,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <a
-                            href={route('export.shipments')}
+                            href={route('export.shipments', { company: currentCompany.slug })}
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
                             <Icons.Download className="h-4 w-4" />
@@ -205,12 +220,16 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                     </div>
                 </div>
 
-                {/* Flash Message */}
-                {flash?.status && (
-                    <Alert type="success" onClose={() => router.reload({ only: [] })}>
-                        {flash.status}
-                    </Alert>
-                )}
+                {/* Flash Message Toast */}
+                <AnimatePresence>
+                    {flash?.status && (
+                        <Toast 
+                            message={flash.status} 
+                            type="success"
+                            onClose={() => router.reload({ only: [] })}
+                        />
+                    )}
+                </AnimatePresence>
 
                 {/* Create Form */}
                 <AnimatePresence>
@@ -312,8 +331,8 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                             label={`Coût (${symbol})`}
                                             type="number"
                                             step="0.01"
-                                            value={createForm.data.cost_cents ? (createForm.data.cost_cents / 100).toFixed(2) : ''}
-                                            onChange={(e) => createForm.setData('cost_cents', Math.round(parseFloat(e.target.value || 0) * 100))}
+                                            value={createForm.data.cost_cents ? (Number(createForm.data.cost_cents) / 100).toFixed(2) : ''}
+                                            onChange={(e) => createForm.setData('cost_cents', String(Math.round(parseFloat(e.target.value || '0') * 100)))}
                                             error={createForm.errors.cost_cents}
                                             placeholder="0.00"
                                         />
@@ -322,8 +341,8 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                             label={`Prix (${symbol})`}
                                             type="number"
                                             step="0.01"
-                                            value={createForm.data.price_cents ? (createForm.data.price_cents / 100).toFixed(2) : ''}
-                                            onChange={(e) => createForm.setData('price_cents', Math.round(parseFloat(e.target.value || 0) * 100))}
+                                            value={createForm.data.price_cents ? (Number(createForm.data.price_cents) / 100).toFixed(2) : ''}
+                                            onChange={(e) => createForm.setData('price_cents', String(Math.round(parseFloat(e.target.value || '0') * 100)))}
                                             error={createForm.errors.price_cents}
                                             placeholder="0.00"
                                         />
@@ -459,8 +478,8 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                             label={`Coût (${symbol})`}
                                             type="number"
                                             step="0.01"
-                                            value={editForm.data.cost_cents ? (editForm.data.cost_cents / 100).toFixed(2) : ''}
-                                            onChange={(e) => editForm.setData('cost_cents', Math.round(parseFloat(e.target.value || 0) * 100))}
+                                            value={editForm.data.cost_cents ? (Number(editForm.data.cost_cents) / 100).toFixed(2) : ''}
+                                            onChange={(e) => editForm.setData('cost_cents', String(Math.round(parseFloat(e.target.value || '0') * 100)))}
                                             error={editForm.errors.cost_cents}
                                         />
 
@@ -468,8 +487,8 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                             label={`Prix (${symbol})`}
                                             type="number"
                                             step="0.01"
-                                            value={editForm.data.price_cents ? (editForm.data.price_cents / 100).toFixed(2) : ''}
-                                            onChange={(e) => editForm.setData('price_cents', Math.round(parseFloat(e.target.value || 0) * 100))}
+                                            value={editForm.data.price_cents ? (Number(editForm.data.price_cents) / 100).toFixed(2) : ''}
+                                            onChange={(e) => editForm.setData('price_cents', String(Math.round(parseFloat(e.target.value || '0') * 100)))}
                                             error={editForm.errors.price_cents}
                                         />
 
@@ -532,9 +551,21 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                     )}
                 />
 
+
                 {/* Pagination */}
                 {pagination.length > 0 && <Pagination links={pagination} />}
             </div>
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={!!deletingShipment}
+                title="Supprimer la livraison"
+                message={deletingShipment ? `Êtes-vous sûr de vouloir supprimer la livraison "${deletingShipment.reference || `EXP-${deletingShipment.id}`}" ? Cette action est irréversible.` : ''}
+                confirmText="Supprimer"
+                onConfirm={confirmDelete}
+                onCancel={() => setDeletingShipment(null)}
+            />
         </AuthenticatedLayout>
     );
 }
+

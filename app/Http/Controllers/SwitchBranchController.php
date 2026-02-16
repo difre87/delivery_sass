@@ -8,15 +8,14 @@ use Illuminate\Http\Request;
 
 class SwitchBranchController extends Controller
 {
-    public function __invoke(Request $request, Branch $branch): RedirectResponse
+    public function __invoke(Request $request, string $branchId): RedirectResponse
     {
         $user = $request->user();
         
-        // Vérifier que l'agence appartient à la company actuelle
-        abort_if(
-            $branch->company_id !== $user->current_company_id,
-            404
-        );
+        // Charger l'agence avec vérification de company
+        $branch = Branch::where('id', $branchId)
+            ->where('company_id', $user->current_company_id)
+            ->firstOrFail();
         
         // Vérifier que l'utilisateur a accès à cette agence
         $hasAccess = $user->branches()->where('branches.id', $branch->id)->exists();

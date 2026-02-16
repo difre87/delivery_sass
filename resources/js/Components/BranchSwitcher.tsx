@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { Icons } from './Icons';
 
 export default function BranchSwitcher() {
-    const { auth } = usePage().props;
-    const { currentBranch, userBranches } = auth;
+    const { auth } = usePage<any>().props;
+    const { currentBranch, userBranches, currentCompany } = auth;
     const [isOpen, setIsOpen] = useState(false);
 
     // Ne rien afficher si l'utilisateur n'a aucune agence
@@ -13,7 +13,7 @@ export default function BranchSwitcher() {
     }
 
     const switchBranch = (branchId) => {
-        router.post(route('branch.switch', branchId), {}, {
+        router.post(route('branch.switch', { company: currentCompany.slug, branchId: branchId }), {}, {
             preserveScroll: true,
             onSuccess: () => setIsOpen(false),
         });

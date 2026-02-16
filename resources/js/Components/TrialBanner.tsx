@@ -3,7 +3,8 @@ import { Icons } from './Icons';
 import { motion } from 'framer-motion';
 
 export default function TrialBanner() {
-    const { auth } = usePage().props;
+    const page = usePage<any>();
+    const { auth } = page.props;
     const { currentCompany, currentSubscription } = auth;
 
     // Si l'utilisateur a un abonnement actif, ne pas afficher la bannière
@@ -18,7 +19,7 @@ export default function TrialBanner() {
 
     const trialEndsAt = new Date(currentCompany.trial_ends_at);
     const now = new Date();
-    const daysLeft = Math.ceil((trialEndsAt - now) / (1000 * 60 * 60 * 24));
+    const daysLeft = Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     // Si l'essai est terminé, ne pas afficher (un middleware devrait gérer ça)
     if (daysLeft < 0) {
@@ -77,7 +78,7 @@ export default function TrialBanner() {
 
                 <div className="flex items-center gap-3">
                     <Link
-                        href={route('plans.index')}
+                        href={route('plans.index', { company: currentCompany.slug })}
                         className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-lg transition hover:bg-white/90 hover:shadow-xl"
                     >
                         <Icons.TrendUp className="h-4 w-4" />

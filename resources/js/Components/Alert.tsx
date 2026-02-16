@@ -4,7 +4,7 @@ import { Icons } from './Icons';
 export default function Alert({ 
     type = 'success', 
     message, 
-    onClose,
+    onClose = null,
     className = '' 
 }) {
     const types = {

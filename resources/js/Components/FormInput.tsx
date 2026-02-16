@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 export default function FormInput({ 
     label, 
     error, 
-    icon: Icon, 
-    helperText,
+    icon: Icon = null, 
+    helperText = null,
     className = '', 
     ...props 
 }) {

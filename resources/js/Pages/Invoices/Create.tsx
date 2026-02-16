@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import FormInput from '@/Components/FormInput';
@@ -9,6 +9,8 @@ import { Icons } from '@/Components/Icons';
 import { useCurrency } from '@/hooks/useCurrency';
 
 export default function CreateInvoice({ clients, shipments, invoice_number }) {
+    const page = usePage<any>();
+    const { currentCompany } = page.props.auth;
     const { format: formatCurrency, symbol } = useCurrency();
     const { data, setData, post, processing, errors } = useForm({
         client_id: '',
@@ -72,7 +74,7 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route('invoices.store'));
+        post(route('invoices.store', { company: currentCompany.slug }));
     };
 
     // Filter shipments for selected client
@@ -136,6 +138,7 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                     value={data.invoice_date}
                                     onChange={(e) => setData('invoice_date', e.target.value)}
                                     error={errors.invoice_date}
+                                    helperText={null}
                                     required
                                     icon={Icons.Calendar}
                                 />
@@ -145,6 +148,7 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                     value={data.due_date}
                                     onChange={(e) => setData('due_date', e.target.value)}
                                     error={errors.due_date}
+                                    helperText={null}
                                     required
                                     icon={Icons.Calendar}
                                 />
@@ -155,6 +159,7 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                     value={data.tax_rate}
                                     onChange={(e) => setData('tax_rate', parseFloat(e.target.value))}
                                     error={errors.tax_rate}
+                                    helperText={null}
                                     required
                                     icon={Icons.Currency}
                                 />
@@ -223,6 +228,7 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                                             }))
                                                         ]}
                                                         icon={Icons.Shipments}
+                                                        error={null}
                                                     />
                                                 </div>
                                             )}
@@ -232,6 +238,8 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                                     value={item.description}
                                                     onChange={(e) => updateItem(index, 'description', e.target.value)}
                                                     error={errors[`items.${index}.description`]}
+                                                    helperText={null}
+                                                    icon={null}
                                                     required
                                                     placeholder="Service ou produit"
                                                 />
@@ -243,6 +251,8 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                                 value={item.quantity}
                                                 onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
                                                 error={errors[`items.${index}.quantity`]}
+                                                helperText={null}
+                                                icon={null}
                                                 required
                                             />
                                             <FormInput
@@ -253,6 +263,8 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                                                 value={item.unit_price}
                                                 onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value))}
                                                 error={errors[`items.${index}.unit_price`]}
+                                                helperText={null}
+                                                icon={null}
                                                 required
                                             />
                                             <div className="lg:col-span-2">
@@ -333,7 +345,8 @@ export default function CreateInvoice({ clients, shipments, invoice_number }) {
                             <Button
                                 type="button"
                                 variant="secondary"
-                                onClick={() => router.visit(route('invoices.index'))}
+                                icon={null}
+                                onClick={() => router.visit(route('invoices.index', { company: currentCompany.slug }))}
                             >
                                 Annuler
                             </Button>

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Icons } from '@/Components/Icons';
 
 export default function Create({ dispatch_runs, drivers, vehicles, shipments }) {
+    const page = usePage<any>();
+    const { currentCompany } = page.props.auth;
     const { data, setData, post, processing, errors } = useForm({
         dispatch_run_id: '',
         driver_id: '',
@@ -95,7 +97,7 @@ export default function Create({ dispatch_runs, drivers, vehicles, shipments }) 
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route('waybills.store'));
+        post(route('waybills.store', { company: currentCompany.slug }));
     };
 
     return (
@@ -409,7 +411,7 @@ export default function Create({ dispatch_runs, drivers, vehicles, shipments }) 
                         {/* Submit Button */}
                         <div className="flex items-center justify-end gap-4">
                             <a
-                                href={route('waybills.index')}
+                                href={route('waybills.index', { company: currentCompany.slug })}
                                 className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all"
                             >
                                 Annuler

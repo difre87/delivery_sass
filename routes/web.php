@@ -5,6 +5,7 @@ use App\Http\Controllers\Onboarding\CompanyOnboardingController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\AppPlaceholderController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DispatchRunController;
@@ -90,11 +91,17 @@ Route::middleware('auth')->group(function () {
         // Analytics
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
         
+        // Tracking GPS
+        Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking.index');
+        Route::get('/tracking/live', [TrackingController::class, 'liveLocations'])->name('tracking.live');
+        Route::post('/tracking', [TrackingController::class, 'store'])->name('tracking.store');
+        Route::get('/tracking/{vehicle}/history', [TrackingController::class, 'history'])->name('tracking.history');
+        
         // Clients
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
         Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
-        Route::patch('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
-        Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+        Route::patch('/clients/{clientId}', [ClientController::class, 'update'])->name('clients.update')->where('clientId', '[0-9]+');
+        Route::delete('/clients/{clientId}', [ClientController::class, 'destroy'])->name('clients.destroy')->where('clientId', '[0-9]+');
         
         // Drivers
         Route::get('/drivers', [DriverController::class, 'index'])->name('drivers.index');
@@ -132,25 +139,25 @@ Route::middleware('auth')->group(function () {
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
         Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
-        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
-        Route::patch('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
-        Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
-        Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
-        Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
-        Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'generatePdf'])->name('invoices.pdf');
+        Route::get('/invoices/{invoiceId}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::patch('/invoices/{invoiceId}', [InvoiceController::class, 'update'])->name('invoices.update');
+        Route::delete('/invoices/{invoiceId}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+        Route::post('/invoices/{invoiceId}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
+        Route::post('/invoices/{invoiceId}/send', [InvoiceController::class, 'send'])->name('invoices.send');
+        Route::get('/invoices/{invoiceId}/pdf', [InvoiceController::class, 'generatePdf'])->name('invoices.pdf');
         
         // Waybills
         Route::get('/waybills', [WaybillController::class, 'index'])->name('waybills.index');
         Route::get('/waybills/create', [WaybillController::class, 'create'])->name('waybills.create');
         Route::post('/waybills', [WaybillController::class, 'store'])->name('waybills.store');
-        Route::get('/waybills/{waybill}', [WaybillController::class, 'show'])->name('waybills.show');
-        Route::patch('/waybills/{waybill}', [WaybillController::class, 'update'])->name('waybills.update');
-        Route::delete('/waybills/{waybill}', [WaybillController::class, 'destroy'])->name('waybills.destroy');
-        Route::post('/waybills/{waybill}/mark-issued', [WaybillController::class, 'markAsIssued'])->name('waybills.mark-issued');
-        Route::post('/waybills/{waybill}/mark-in-progress', [WaybillController::class, 'markAsInProgress'])->name('waybills.mark-in-progress');
-        Route::post('/waybills/{waybill}/mark-completed', [WaybillController::class, 'markAsCompleted'])->name('waybills.mark-completed');
-        Route::patch('/waybills/{waybill}/items/{item}', [WaybillController::class, 'updateItem'])->name('waybills.items.update');
-        Route::get('/waybills/{waybill}/pdf', [WaybillController::class, 'generatePdf'])->name('waybills.pdf');
+        Route::get('/waybills/{waybillId}', [WaybillController::class, 'show'])->name('waybills.show');
+        Route::patch('/waybills/{waybillId}', [WaybillController::class, 'update'])->name('waybills.update');
+        Route::delete('/waybills/{waybillId}', [WaybillController::class, 'destroy'])->name('waybills.destroy');
+        Route::post('/waybills/{waybillId}/mark-issued', [WaybillController::class, 'markAsIssued'])->name('waybills.mark-issued');
+        Route::post('/waybills/{waybillId}/mark-in-progress', [WaybillController::class, 'markAsInProgress'])->name('waybills.mark-in-progress');
+        Route::post('/waybills/{waybillId}/mark-completed', [WaybillController::class, 'markAsCompleted'])->name('waybills.mark-completed');
+        Route::patch('/waybills/{waybillId}/items/{item}', [WaybillController::class, 'updateItem'])->name('waybills.items.update');
+        Route::get('/waybills/{waybillId}/pdf', [WaybillController::class, 'generatePdf'])->name('waybills.pdf');
         
         // Settings
         Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
@@ -161,7 +168,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/settings/branches/{branch}', [\App\Http\Controllers\CompanyBranchController::class, 'destroy'])->name('settings.branches.destroy');
         
         // Branch Switching
-        Route::post('/switch-branch/{branch}', \App\Http\Controllers\SwitchBranchController::class)->name('branch.switch');
+        Route::post('/switch-branch/{branchId}', \App\Http\Controllers\SwitchBranchController::class)->name('branch.switch');
         
         // Plans & Subscriptions
         Route::get('/plans', [SubscriptionController::class, 'index'])->name('plans.index');

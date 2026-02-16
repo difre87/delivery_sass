@@ -25,6 +25,8 @@ class SetCompanyFromSlug
 
         // Récupérer le slug de la société depuis l'URL
         $companySlug = $request->route('company');
+
+        
         
         if (!$companySlug) {
             // Si pas de slug dans l'URL, rediriger vers la société actuelle ou la première
@@ -52,15 +54,15 @@ class SetCompanyFromSlug
         if ($user->current_company_id !== $company->id) {
             $user->forceFill(['current_company_id' => $company->id])->save();
         }
+        
+        // Keep the in-memory relation in sync for this request.
+        $user->setRelation('currentCompany', $company);
 
         // S'assurer que l'utilisateur a une agence active
         if (!$user->current_branch_id) {
-            $firstBranch = $user->branches()->where('branch_id', function($query) use ($company) {
-                $query->select('id')
-                    ->from('branches')
-                    ->where('company_id', $company->id)
-                    ->limit(1);
-            })->first();
+            $firstBranch = $user->branches()
+                ->whereHas('company', fn($q) => $q->where('companies.id', $company->id))
+                ->first();
 
             if ($firstBranch) {
                 $user->forceFill(['current_branch_id' => $firstBranch->id])->save();

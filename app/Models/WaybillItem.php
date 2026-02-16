@@ -47,7 +47,7 @@ class WaybillItem extends Model
         $this->shipment->update(['status' => 'in_transit']);
     }
 
-    public function markAsDelivered(string $notes = null, string $signatureUrl = null): void
+    public function markAsDelivered(?string $notes = null, ?string $signatureUrl = null): void
     {
         $this->update([
             'status' => 'delivered',
@@ -64,7 +64,7 @@ class WaybillItem extends Model
         $this->waybill->incrementCompletedShipments();
     }
 
-    public function markAsFailed(string $notes = null): void
+    public function markAsFailed(?string $notes = null): void
     {
         $this->update([
             'status' => 'failed',

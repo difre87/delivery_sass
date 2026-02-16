@@ -23,8 +23,7 @@ class ClientUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var Client|null $client */
-        $client = $this->route('client');
+        $clientId = $this->route('clientId');
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -34,7 +33,7 @@ class ClientUpdateRequest extends FormRequest
                 'max:50',
                 Rule::unique('clients', 'code')
                     ->where(fn ($query) => $query->where('company_id', $this->user()->current_company_id))
-                    ->ignore($client?->id),
+                    ->ignore($clientId),
             ],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],

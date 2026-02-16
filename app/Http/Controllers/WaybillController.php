@@ -125,29 +125,41 @@ class WaybillController extends Controller
 
         $waybill->updateTotalShipments();
 
-        return redirect()->route('waybills.show', $waybill->id)
+        $company = $request->user()->currentCompany;
+        return redirect()->route('waybills.show', ['company' => $company->slug, 'waybillId' => $waybill->id])
             ->with('success', 'Bordereau créé avec succès.');
     }
 
-    public function show(Request $request, Waybill $waybill): Response
+    public function show(Request $request, string $waybillId): Response
     {
-        $waybill->load([
-            'driver',
-            'vehicle',
-            'dispatchRun',
-            'items.shipment.senderAddress',
-            'items.shipment.recipientAddress',
-            'items.shipment.client',
-            'company'
-        ]);
+        $company = $request->user()->currentCompany;
+        
+        $waybill = Waybill::where('company_id', $company->id)
+            ->where('id', $waybillId)
+            ->with([
+                'driver',
+                'vehicle',
+                'dispatchRun',
+                'items.shipment.senderAddress',
+                'items.shipment.recipientAddress',
+                'items.shipment.client',
+                'company'
+            ])
+            ->firstOrFail();
 
         return Inertia::render('Waybills/Show', [
             'waybill' => $waybill,
         ]);
     }
 
-    public function update(Request $request, Waybill $waybill): RedirectResponse
+    public function update(Request $request, string $waybillId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $waybill = Waybill::where('company_id', $company->id)
+            ->where('id', $waybillId)
+            ->firstOrFail();
+        
         $validated = $request->validate([
             'status' => ['required', 'in:draft,issued,in_progress,completed,cancelled'],
             'notes' => ['nullable', 'string'],
@@ -163,54 +175,93 @@ class WaybillController extends Controller
         return back()->with('success', 'Bordereau mis à jour avec succès.');
     }
 
-    public function destroy(Request $request, Waybill $waybill): RedirectResponse
+    public function destroy(Request $request, string $waybillId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $waybill = Waybill::where('company_id', $company->id)
+            ->where('id', $waybillId)
+            ->firstOrFail();
+        
         $waybill->delete();
 
-        return redirect()->route('waybills.index')
+        return redirect()->route('waybills.index', ['company' => $company->slug])
             ->with('success', 'Bordereau supprimé avec succès.');
     }
 
-    public function generatePdf(Request $request, Waybill $waybill)
+    public function generatePdf(Request $request, string $waybillId)
     {
-        $waybill->load([
-            'driver',
-            'vehicle',
-            'dispatchRun',
-            'items.shipment.senderAddress',
-            'items.shipment.recipientAddress',
-            'items.shipment.client',
-            'company'
-        ]);
+        $company = $request->user()->currentCompany;
+        
+        $waybill = Waybill::where('company_id', $company->id)
+            ->where('id', $waybillId)
+            ->with([
+                'driver',
+                'vehicle',
+                'dispatchRun',
+                'items.shipment.senderAddress',
+                'items.shipment.recipientAddress',
+                'items.shipment.client',
+                'company'
+            ])
+            ->firstOrFail();
 
         $pdf = Pdf::loadView('waybills.pdf', ['waybill' => $waybill]);
 
         return $pdf->download($waybill->number . '.pdf');
     }
 
-    public function markAsIssued(Request $request, Waybill $waybill): RedirectResponse
+    public function markAsIssued(Request $request, string $waybillId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $waybill = Waybill::where('company_id', $company->id)
+            ->where('id', $waybillId)
+            ->firstOrFail();
+        
         $waybill->markAsIssued();
 
         return back()->with('success', 'Bordereau émis avec succès.');
     }
 
-    public function markAsInProgress(Request $request, Waybill $waybill): RedirectResponse
+    public function markAsInProgress(Request $request, string $waybillId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $waybill = Waybill::where('company_id', $company->id)
+            ->where('id', $waybillId)
+            ->firstOrFail();
+        
         $waybill->markAsInProgress();
 
         return back()->with('success', 'Bordereau en cours.');
     }
 
-    public function markAsCompleted(Request $request, Waybill $waybill): RedirectResponse
+    public function markAsCompleted(Request $request, string $waybillId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $waybill = Waybill::where('company_id', $company->id)
+            ->where('id', $waybillId)
+            ->firstOrFail();
+        
         $waybill->markAsCompleted();
 
         return back()->with('success', 'Bordereau terminé.');
     }
 
-    public function updateItem(Request $request, Waybill $waybill, WaybillItem $item): RedirectResponse
+    public function updateItem(Request $request, string $waybillId, WaybillItem $item): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $waybill = Waybill::where('company_id', $company->id)
+            ->where('id', $waybillId)
+            ->firstOrFail();
+        
+        // Verify item belongs to waybill
+        if ($item->waybill_id !== $waybill->id) {
+            abort(404);
+        }
         $validated = $request->validate([
             'status' => ['required', 'in:pending,picked_up,delivered,failed'],
             'delivery_notes' => ['nullable', 'string'],

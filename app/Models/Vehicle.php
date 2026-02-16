@@ -70,4 +70,46 @@ class Vehicle extends Model
     {
         return $this->hasMany(VehicleAssignment::class);
     }
+
+    /**
+     * @return HasMany<VehicleLocation, $this>
+     */
+    public function locations(): HasMany
+    {
+        return $this->hasMany(VehicleLocation::class);
+    }
+
+    /**
+     * Get the latest location
+     */
+    public function latestLocation()
+    {
+        return $this->hasOne(VehicleLocation::class)->latestOfMany('recorded_at');
+    }
+
+    /**
+     * Get the current driver assignment
+     */
+    public function currentAssignment()
+    {
+        return $this->hasOne(VehicleAssignment::class)
+            ->whereNull('ends_at')
+            ->latest();
+    }
+
+    /**
+     * Get the current driver
+     */
+    public function currentDriver()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            VehicleAssignment::class,
+            'vehicle_id',
+            'id',
+            'id',
+            'driver_id'
+        )->whereNull('vehicle_assignments.ends_at')
+         ->latest('vehicle_assignments.created_at');
+    }
 }

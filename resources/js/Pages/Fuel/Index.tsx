@@ -9,7 +9,8 @@ import FormSelect from '@/Components/FormSelect';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
-import Alert from '@/Components/Alert';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import Toast from '@/Components/Toast';
 import { useCurrency } from '@/hooks/useCurrency';
 
 const initialForm = {
@@ -25,10 +26,12 @@ const initialForm = {
 };
 
 export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
-    const flash = usePage().props.flash;
+    const flash = usePage<any>().props.flash;
+    const currentCompany = usePage<any>().props.auth.currentCompany;
     const { formatCents, symbol } = useCurrency();
     const [editingFuelLogId, setEditingFuelLogId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [deletingFuelLog, setDeletingFuelLog] = useState<any>(null);
     
     const createForm = useForm(initialForm);
     const editForm = useForm(initialForm);
@@ -74,8 +77,14 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
     };
 
     const deleteFuelLog = (log) => {
-        if (!confirm(`Supprimer le plein #${log.id} ?`)) return;
-        router.delete(route('fuel.destroy', log.id));
+        setDeletingFuelLog(log);
+    };
+
+    const confirmDelete = () => {
+        if (deletingFuelLog) {
+            router.delete(route('fuel.destroy', deletingFuelLog.id));
+            setDeletingFuelLog(null);
+        }
     };
 
     const columns = [
@@ -179,7 +188,13 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
     }, [rows]);
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                    Carburant
+                </h2>
+            }
+        >
             <Head title="Carburant" />
             
             <div className="space-y-6">
@@ -198,7 +213,7 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <a
-                            href={route('export.fuel')}
+                            href={route('export.fuel', { company: currentCompany.slug })}
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
                             <Icons.Download className="h-4 w-4" />
@@ -266,12 +281,16 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                     </div>
                 )}
 
-                {/* Flash Message */}
-                {flash?.status && (
-                    <Alert type="success" onClose={() => router.reload({ only: [] })}>
-                        {flash.status}
-                    </Alert>
-                )}
+                {/* Flash Message Toast */}
+                <AnimatePresence>
+                    {flash?.status && (
+                        <Toast 
+                            message={flash.status} 
+                            type="success"
+                            onClose={() => router.reload({ only: [] })}
+                        />
+                    )}
+                </AnimatePresence>
 
                 {/* Create Form */}
                 <AnimatePresence>
@@ -346,8 +365,8 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            value={createForm.data.total_cents ? (createForm.data.total_cents / 100).toFixed(2) : ''}
-                                            onChange={(e) => createForm.setData('total_cents', Math.round(parseFloat(e.target.value || 0) * 100))}
+                                            value={createForm.data.total_cents ? (Number(createForm.data.total_cents) / 100).toFixed(2) : ''}
+                                            onChange={(e) => createForm.setData('total_cents', String(Math.round(parseFloat(e.target.value || '0') * 100)))}
                                             error={createForm.errors.total_cents}
                                             required
                                             placeholder="0.00"
@@ -509,8 +528,8 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            value={editForm.data.total_cents ? (editForm.data.total_cents / 100).toFixed(2) : ''}
-                                            onChange={(e) => editForm.setData('total_cents', Math.round(parseFloat(e.target.value || 0) * 100))}
+                                            value={editForm.data.total_cents ? (Number(editForm.data.total_cents) / 100).toFixed(2) : ''}
+                                            onChange={(e) => editForm.setData('total_cents', String(Math.round(parseFloat(e.target.value || '0') * 100)))}
                                             error={editForm.errors.total_cents}
                                             required
                                             icon={Icons.Currency}
@@ -567,6 +586,16 @@ export default function FuelIndex({ fuelLogs, vehicles = [], runs = [] }) {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={!!deletingFuelLog}
+                title="Supprimer le plein"
+                message={deletingFuelLog ? `Êtes-vous sûr de vouloir supprimer le plein #${deletingFuelLog.id} ? Cette action est irréversible.` : ''}
+                confirmText="Supprimer"
+                onConfirm={confirmDelete}
+                onCancel={() => setDeletingFuelLog(null)}
+            />
         </AuthenticatedLayout>
     );
 }

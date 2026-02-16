@@ -1,10 +1,12 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Icons } from '@/Components/Icons';
 
 export default function Show({ waybill }) {
+    const page = usePage<any>();
+    const { currentCompany } = page.props.auth;
     const [updatingItem, setUpdatingItem] = useState(null);
 
     const getStatusColor = (status) => {
@@ -51,36 +53,36 @@ export default function Show({ waybill }) {
 
     const handleMarkAsIssued = () => {
         if (confirm('Confirmer l\'émission de ce bordereau ?')) {
-            router.post(route('waybills.mark-issued', waybill.id));
+            router.post(route('waybills.mark-issued', { company: currentCompany.slug, waybillId: waybill.id }));
         }
     };
 
     const handleMarkAsInProgress = () => {
         if (confirm('Marquer ce bordereau comme en cours ?')) {
-            router.post(route('waybills.mark-in-progress', waybill.id));
+            router.post(route('waybills.mark-in-progress', { company: currentCompany.slug, waybillId: waybill.id }));
         }
     };
 
     const handleMarkAsCompleted = () => {
         if (confirm('Marquer ce bordereau comme terminé ?')) {
-            router.post(route('waybills.mark-completed', waybill.id));
+            router.post(route('waybills.mark-completed', { company: currentCompany.slug, waybillId: waybill.id }));
         }
     };
 
     const handleDownloadPdf = () => {
-        window.open(route('waybills.pdf', waybill.id), '_blank');
+        window.open(route('waybills.pdf', { company: currentCompany.slug, waybillId: waybill.id }), '_blank');
     };
 
     const handleDelete = () => {
         if (confirm('Êtes-vous sûr de vouloir supprimer ce bordereau ?')) {
-            router.delete(route('waybills.destroy', waybill.id));
+            router.delete(route('waybills.destroy', { company: currentCompany.slug, waybillId: waybill.id }));
         }
     };
 
     const updateItemStatus = (itemId, status) => {
         setUpdatingItem(itemId);
         router.post(
-            route('waybills.items.update', { waybill: waybill.id, item: itemId }),
+            route('waybills.items.update', { company: currentCompany.slug, waybillId: waybill.id, item: itemId }),
             { status },
             {
                 onFinish: () => setUpdatingItem(null),
@@ -109,7 +111,7 @@ export default function Show({ waybill }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <a
-                            href={route('waybills.index')}
+                            href={route('waybills.index', { company: currentCompany.slug })}
                             className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
                         >
                             Retour
@@ -416,7 +418,7 @@ export default function Show({ waybill }) {
                                         {/* Edit */}
                                         {waybill.status === 'draft' && (
                                             <a
-                                                href={route('waybills.edit', waybill.id)}
+                                                href={route('waybills.edit', { company: currentCompany.slug, waybillId: waybill.id })}
                                                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all"
                                             >
                                                 <Icons.FileText className="w-5 h-5" />

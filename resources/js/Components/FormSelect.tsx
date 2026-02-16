@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 export default function FormSelect({ 
     label, 
     error, 
-    icon: Icon,
+    icon: Icon = null,
     options = [],
     className = '', 
     ...props 

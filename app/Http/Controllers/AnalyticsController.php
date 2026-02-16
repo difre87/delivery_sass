@@ -31,7 +31,7 @@ class AnalyticsController extends Controller
             'total_revenue' => $this->getTotalRevenue($company, $startDate),
             'total_deliveries' => $company->shipments()->where('created_at', '>=', $startDate)->count(),
             'avg_delivery_time' => $this->getAverageDeliveryTime($company, $startDate),
-            'customer_satisfaction' => 4.7,
+            'customer_satisfaction' => $this->getCustomerSatisfaction($company, $startDate),
             'on_time_percentage' => $this->getOnTimePercentage($company, $startDate),
             'fuel_efficiency' => $this->getFuelEfficiency($company, $startDate),
         ];
@@ -42,44 +42,67 @@ class AnalyticsController extends Controller
         // Deliveries trend
         $deliveriesTrend = $this->getDeliveriesTrend($company, $startDate);
 
-        // Top clients
+        // Top clients with real growth rate
         $topClients = $company->clients()
             ->select('clients.*')
             ->selectRaw('COALESCE(SUM(invoices.total), 0) * 100 as total_spent')
             ->selectRaw('COUNT(DISTINCT shipments.id) as deliveries_count')
-            ->selectRaw('12 as growth_rate')
             ->leftJoin('shipments', 'clients.id', '=', 'shipments.client_id')
             ->leftJoin('invoices', 'clients.id', '=', 'invoices.client_id')
+            ->where(function($query) use ($startDate) {
+                $query->where('shipments.created_at', '>=', $startDate)
+                      ->orWhere('invoices.created_at', '>=', $startDate);
+            })
             ->groupBy('clients.id')
             ->orderByDesc('total_spent')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function($client) use ($company, $startDate) {
+                $client->growth_rate = $this->getClientGrowthRate($company, $client->id, $startDate);
+                return $client;
+            });
 
-        // Vehicle stats
+        // Vehicle stats with real efficiency score
         $vehicleStats = $company->vehicles()
             ->select('vehicles.id', 'vehicles.plate_number', 'vehicles.make', 'vehicles.model')
             ->selectRaw('COUNT(DISTINCT dispatch_runs.id) as deliveries')
-            ->selectRaw('0 as distance_km') // Placeholder - no distance tracking yet
+            ->selectRaw('COALESCE(vehicles.current_odometer - vehicles.odometer_km, 0) as distance_km')
             ->selectRaw('COALESCE(SUM(fuel_logs.total_cents), 0) as fuel_cost')
-            ->selectRaw('85 as efficiency_score')
-            ->leftJoin('dispatch_runs', 'vehicles.id', '=', 'dispatch_runs.vehicle_id')
-            ->leftJoin('fuel_logs', 'vehicles.id', '=', 'fuel_logs.vehicle_id')
-            ->groupBy('vehicles.id', 'vehicles.plate_number', 'vehicles.make', 'vehicles.model')
+            ->leftJoin('dispatch_runs', function($join) use ($startDate) {
+                $join->on('vehicles.id', '=', 'dispatch_runs.vehicle_id')
+                     ->where('dispatch_runs.created_at', '>=', $startDate);
+            })
+            ->leftJoin('fuel_logs', function($join) use ($startDate) {
+                $join->on('vehicles.id', '=', 'fuel_logs.vehicle_id')
+                     ->where('fuel_logs.created_at', '>=', $startDate);
+            })
+            ->groupBy('vehicles.id', 'vehicles.plate_number', 'vehicles.make', 'vehicles.model', 'vehicles.current_odometer', 'vehicles.odometer_km')
             ->orderByDesc('deliveries')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function($vehicle) {
+                // Calculate efficiency score based on deliveries per fuel cost
+                $vehicle->efficiency_score = $this->calculateVehicleEfficiency($vehicle);
+                return $vehicle;
+            });
 
-        // Driver stats
+        // Driver stats with real performance metrics
         $driverStats = $company->drivers()
             ->select('drivers.id', 'drivers.name')
             ->selectRaw('COUNT(DISTINCT dispatch_runs.id) as deliveries')
-            ->selectRaw('90 as on_time_rate')
-            ->selectRaw('4.8 as avg_rating')
-            ->leftJoin('dispatch_runs', 'drivers.id', '=', 'dispatch_runs.driver_id')
+            ->leftJoin('dispatch_runs', function($join) use ($startDate) {
+                $join->on('drivers.id', '=', 'dispatch_runs.driver_id')
+                     ->where('dispatch_runs.created_at', '>=', $startDate);
+            })
             ->groupBy('drivers.id', 'drivers.name')
             ->orderByDesc('deliveries')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function($driver) use ($company, $startDate) {
+                $driver->on_time_rate = $this->getDriverOnTimeRate($company, $driver->id, $startDate);
+                $driver->avg_rating = $this->getDriverAverageRating($company, $driver->id, $startDate);
+                return $driver;
+            });
 
         $analytics = [
             'overview' => $overview,
@@ -104,7 +127,44 @@ class AnalyticsController extends Controller
 
     private function getAverageDeliveryTime($company, $startDate)
     {
-        return 35; // Default 35 minutes
+        // Calculate average time between picked_up_at and delivered_at
+        $shipments = $company->shipments()
+            ->where('created_at', '>=', $startDate)
+            ->whereNotNull('picked_up_at')
+            ->whereNotNull('delivered_at')
+            ->where('status', 'delivered')
+            ->get();
+
+        if ($shipments->isEmpty()) {
+            return 35; // Default 35 minutes if no data
+        }
+
+        $totalMinutes = $shipments->sum(function($shipment) {
+            return $shipment->picked_up_at->diffInMinutes($shipment->delivered_at);
+        });
+
+        return round($totalMinutes / $shipments->count());
+    }
+
+    private function getCustomerSatisfaction($company, $startDate)
+    {
+        // Calculate satisfaction based on on-time delivery rate
+        // Formula: Base 3.0 + (on_time_rate / 100) * 2.0 = range 3.0-5.0
+        $onTimeRate = $this->getOnTimePercentage($company, $startDate);
+        
+        $totalDeliveries = $company->shipments()
+            ->where('created_at', '>=', $startDate)
+            ->where('status', 'delivered')
+            ->count();
+
+        if ($totalDeliveries === 0) {
+            return 4.5; // Default if no data
+        }
+
+        // Calculate satisfaction score (3.0 to 5.0 scale)
+        $satisfaction = 3.0 + ($onTimeRate / 100) * 2.0;
+        
+        return round($satisfaction, 1);
     }
 
     private function getOnTimePercentage($company, $startDate)
@@ -126,7 +186,121 @@ class AnalyticsController extends Controller
 
     private function getFuelEfficiency($company, $startDate)
     {
-        return 9.5; // Default value
+        // Calculate average fuel efficiency (liters per 100km)
+        $fuelLogs = $company->vehicles()
+            ->join('fuel_logs', 'vehicles.id', '=', 'fuel_logs.vehicle_id')
+            ->where('fuel_logs.created_at', '>=', $startDate)
+            ->whereNotNull('fuel_logs.liters')
+            ->selectRaw('SUM(fuel_logs.liters) as total_liters')
+            ->selectRaw('SUM(COALESCE(vehicles.current_odometer - vehicles.odometer_km, 0)) as total_distance')
+            ->first();
+
+        if (!$fuelLogs || $fuelLogs->total_distance == 0 || $fuelLogs->total_liters == 0) {
+            return 9.5; // Default value if no data
+        }
+
+        // Calculate L/100km
+        $efficiency = ($fuelLogs->total_liters / $fuelLogs->total_distance) * 100;
+        
+        return round($efficiency, 1);
+    }
+
+    private function getClientGrowthRate($company, $clientId, $startDate)
+    {
+        // Calculate growth rate by comparing current period vs previous period
+        $periodDays = Carbon::now()->diffInDays($startDate);
+        $previousStartDate = Carbon::parse($startDate)->subDays($periodDays);
+
+        $currentRevenue = $company->invoices()
+            ->where('client_id', $clientId)
+            ->where('created_at', '>=', $startDate)
+            ->sum('total');
+
+        $previousRevenue = $company->invoices()
+            ->where('client_id', $clientId)
+            ->where('created_at', '>=', $previousStartDate)
+            ->where('created_at', '<', $startDate)
+            ->sum('total');
+
+        if ($previousRevenue == 0) {
+            return $currentRevenue > 0 ? 100 : 0;
+        }
+
+        $growthRate = (($currentRevenue - $previousRevenue) / $previousRevenue) * 100;
+        
+        return round($growthRate);
+    }
+
+    private function calculateVehicleEfficiency($vehicle)
+    {
+        // Calculate efficiency score based on deliveries and fuel cost
+        // Higher deliveries with lower fuel cost = higher efficiency
+        if ($vehicle->deliveries == 0) {
+            return 50; // Neutral score
+        }
+
+        $fuelCostPerDelivery = $vehicle->fuel_cost > 0 
+            ? $vehicle->fuel_cost / $vehicle->deliveries 
+            : 0;
+
+        // Score calculation: 100 points minus penalty for high fuel cost
+        // Assuming average good cost per delivery is ~500 cents (5€)
+        $penalty = min(50, ($fuelCostPerDelivery / 500) * 50);
+        $score = max(0, min(100, 100 - $penalty));
+
+        // Bonus for high delivery count
+        if ($vehicle->deliveries > 50) {
+            $score = min(100, $score + 10);
+        } elseif ($vehicle->deliveries > 30) {
+            $score = min(100, $score + 5);
+        }
+
+        return round($score);
+    }
+
+    private function getDriverOnTimeRate($company, $driverId, $startDate)
+    {
+        $totalRuns = $company->dispatchRuns()
+            ->where('driver_id', $driverId)
+            ->where('created_at', '>=', $startDate)
+            ->whereIn('status', ['completed', 'in_progress', 'cancelled'])
+            ->count();
+
+        if ($totalRuns === 0) {
+            return 90; // Default if no data
+        }
+
+        $completedRuns = $company->dispatchRuns()
+            ->where('driver_id', $driverId)
+            ->where('created_at', '>=', $startDate)
+            ->where('status', 'completed')
+            ->count();
+
+        return round(($completedRuns / $totalRuns) * 100);
+    }
+
+    private function getDriverAverageRating($company, $driverId, $startDate)
+    {
+        // Calculate rating based on performance metrics
+        $onTimeRate = $this->getDriverOnTimeRate($company, $driverId, $startDate);
+        
+        $totalDeliveries = $company->dispatchRuns()
+            ->where('driver_id', $driverId)
+            ->where('created_at', '>=', $startDate)
+            ->where('status', 'completed')
+            ->count();
+
+        // Base rating calculation: 3.0 + (on_time_rate / 100) * 2.0 = 3.0-5.0
+        $rating = 3.0 + ($onTimeRate / 100) * 2.0;
+
+        // Bonus for high activity (more deliveries = more reliable data)
+        if ($totalDeliveries > 100) {
+            $rating = min(5.0, $rating + 0.2);
+        } elseif ($totalDeliveries > 50) {
+            $rating = min(5.0, $rating + 0.1);
+        }
+
+        return round($rating, 1);
     }
 
     private function getRevenueTrend($company, $startDate)

@@ -36,32 +36,32 @@ class ClientController extends Controller
             'company_id' => $company->id,
         ]);
 
-        return redirect()->route('clients.index')->with('status', 'Client créé avec succès.');
+        return redirect()->route('clients.index', ['company' => $company->slug])->with('status', 'Client créé avec succès.');
     }
 
-    public function update(ClientUpdateRequest $request, Client $client): RedirectResponse
+    public function update(ClientUpdateRequest $request, string $clientId): RedirectResponse
     {
-        $this->ensureClientBelongsToCurrentCompany($request, $client);
+        $company = $request->user()->currentCompany;
+        
+        $clientModel = Client::where('company_id', $company->id)
+            ->where('id', $clientId)
+            ->firstOrFail();
 
-        $client->update($request->validated());
+        $clientModel->update($request->validated());
 
-        return redirect()->route('clients.index')->with('status', 'Client mis à jour.');
+        return redirect()->route('clients.index', ['company' => $company->slug])->with('status', 'Client mis à jour.');
     }
 
-    public function destroy(Request $request, Client $client): RedirectResponse
+    public function destroy(Request $request, string $clientId): RedirectResponse
     {
-        $this->ensureClientBelongsToCurrentCompany($request, $client);
+        $company = $request->user()->currentCompany;
+        
+        $clientModel = Client::where('company_id', $company->id)
+            ->where('id', $clientId)
+            ->firstOrFail();
 
-        $client->delete();
+        $clientModel->delete();
 
-        return redirect()->route('clients.index')->with('status', 'Client supprimé.');
-    }
-
-    private function ensureClientBelongsToCurrentCompany(Request $request, Client $client): void
-    {
-        abort_if(
-            $client->company_id !== $request->user()->current_company_id,
-            404
-        );
+        return redirect()->route('clients.index', ['company' => $company->slug])->with('status', 'Client supprimé.');
     }
 }

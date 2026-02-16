@@ -4,7 +4,7 @@ export default function Button({
     children, 
     variant = 'primary', 
     size = 'md',
-    icon: Icon,
+    icon: Icon = null,
     isLoading = false,
     className = '', 
     ...props 

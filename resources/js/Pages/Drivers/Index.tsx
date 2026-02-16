@@ -5,7 +5,8 @@ import FormCheckbox from '@/Components/FormCheckbox';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
-import Alert from '@/Components/Alert';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import Toast from '@/Components/Toast';
 import Badge from '@/Components/Badge';
 import { Icons } from '@/Components/Icons';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -24,10 +25,12 @@ const initialForm = {
 const currentVehicle = (driver) => driver.vehicle_assignments?.[0]?.vehicle ?? null;
 
 export default function DriversIndex({ drivers, vehicles = [] }) {
-    const flash = usePage().props.flash;
+    const flash = usePage<any>().props.flash;
+    const currentCompany = usePage<any>().props.auth.currentCompany;
     const [editingDriverId, setEditingDriverId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [assigningDriverId, setAssigningDriverId] = useState(null);
+    const [deletingDriver, setDeletingDriver] = useState<any>(null);
 
     const createForm = useForm(initialForm);
     const editForm = useForm(initialForm);
@@ -84,8 +87,14 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
     };
 
     const deleteDriver = (driver) => {
-        if (!confirm(`Retirer le livreur "${driver.name}" ?`)) return;
-        router.delete(route('drivers.destroy', driver.id));
+        setDeletingDriver(driver);
+    };
+
+    const confirmDelete = () => {
+        if (deletingDriver) {
+            router.delete(route('drivers.destroy', deletingDriver.id));
+            setDeletingDriver(null);
+        }
     };
 
     const startAssign = (driver) => {
@@ -178,7 +187,7 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <a
-                            href={route('export.drivers')}
+                            href={route('export.drivers', { company: currentCompany.slug })}
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
                             <Icons.Download className="h-4 w-4" />
@@ -201,7 +210,16 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
             <Head title="Livreurs" />
 
             <div className="space-y-6">
-                {flash?.status && <Alert type="success" message={flash.status} />}
+                {/* Flash Message Toast */}
+                <AnimatePresence>
+                    {flash?.status && (
+                        <Toast 
+                            message={flash.status} 
+                            type="success"
+                            onClose={() => router.reload({ only: [] })}
+                        />
+                    )}
+                </AnimatePresence>
 
                 {/* Formulaire de création */}
                 <AnimatePresence>
@@ -501,6 +519,16 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
                     )}
                 </motion.section>
             </div>
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={!!deletingDriver}
+                title="Retirer le livreur"
+                message={deletingDriver ? `Êtes-vous sûr de vouloir retirer "${deletingDriver.name}" ? Cette action est irréversible.` : ''}
+                confirmText="Retirer"
+                onConfirm={confirmDelete}
+                onCancel={() => setDeletingDriver(null)}
+            />
         </AuthenticatedLayout>
     );
 }

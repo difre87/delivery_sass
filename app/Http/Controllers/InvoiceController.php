@@ -112,17 +112,28 @@ class InvoiceController extends Controller
             ->with('success', 'Facture créée avec succès.');
     }
 
-    public function show(Request $request, Invoice $invoice): Response
+    public function show(Request $request, $invoiceId): Response
     {
-        $invoice->load(['client', 'items.shipment', 'company']);
+        $company = $request->user()->currentCompany;
+        
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('id', $invoiceId)
+            ->with(['client', 'items.shipment', 'company'])
+            ->firstOrFail();
 
         return Inertia::render('Invoices/Show', [
             'invoice' => $invoice,
         ]);
     }
 
-    public function update(Request $request, Invoice $invoice): RedirectResponse
+    public function update(Request $request, $invoiceId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('id', $invoiceId)
+            ->firstOrFail();
+        
         $validated = $request->validate([
             'status' => ['required', 'in:draft,sent,paid,overdue,cancelled'],
             'notes' => ['nullable', 'string'],
@@ -137,32 +148,55 @@ class InvoiceController extends Controller
         return back()->with('success', 'Facture mise à jour avec succès.');
     }
 
-    public function destroy(Request $request, Invoice $invoice): RedirectResponse
+    public function destroy(Request $request, $invoiceId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('id', $invoiceId)
+            ->firstOrFail();
+        
         $invoice->delete();
 
-        return redirect()->route('invoices.index')
+        return redirect()->route('invoices.index', ['company' => $company->slug])
             ->with('success', 'Facture supprimée avec succès.');
     }
 
-    public function generatePdf(Request $request, Invoice $invoice)
+    public function generatePdf(Request $request, $invoiceId)
     {
-        $invoice->load(['client', 'items.shipment', 'company']);
+        $company = $request->user()->currentCompany;
+        
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('id', $invoiceId)
+            ->with(['client', 'items.shipment', 'company'])
+            ->firstOrFail();
 
         $pdf = Pdf::loadView('invoices.pdf', ['invoice' => $invoice]);
 
         return $pdf->download($invoice->invoice_number . '.pdf');
     }
 
-    public function markAsPaid(Request $request, Invoice $invoice): RedirectResponse
+    public function markAsPaid(Request $request, $invoiceId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('id', $invoiceId)
+            ->firstOrFail();
+        
         $invoice->markAsPaid();
 
         return back()->with('success', 'Facture marquée comme payée.');
     }
 
-    public function send(Request $request, Invoice $invoice): RedirectResponse
+    public function send(Request $request, $invoiceId): RedirectResponse
     {
+        $company = $request->user()->currentCompany;
+        
+        $invoice = Invoice::where('company_id', $company->id)
+            ->where('id', $invoiceId)
+            ->firstOrFail();
+        
         $invoice->update(['status' => 'sent']);
 
         // TODO: Envoyer l'email avec la facture au client

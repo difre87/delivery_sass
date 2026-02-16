@@ -5,7 +5,8 @@ import FormCheckbox from '@/Components/FormCheckbox';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
-import Alert from '@/Components/Alert';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import Toast from '@/Components/Toast';
 import { Icons } from '@/Components/Icons';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
@@ -21,9 +22,12 @@ const initialForm = {
 };
 
 export default function ClientsIndex({ clients }) {
-    const flash = usePage().props.flash;
+    const page = usePage<any>();
+    const { currentCompany } = page.props.auth;
+    const flash = page.props.flash;
     const [editingClientId, setEditingClientId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [deletingClient, setDeletingClient] = useState<any>(null);
 
     const createForm = useForm(initialForm);
     const editForm = useForm(initialForm);
@@ -33,7 +37,7 @@ export default function ClientsIndex({ clients }) {
 
     const submitCreate = (e) => {
         e.preventDefault();
-        createForm.post(route('clients.store'), {
+        createForm.post(route('clients.store', { company: currentCompany.slug }), {
             onSuccess: () => {
                 createForm.reset();
                 setShowCreateForm(false);
@@ -64,14 +68,21 @@ export default function ClientsIndex({ clients }) {
         e.preventDefault();
         if (!editingClientId) return;
 
-        editForm.patch(route('clients.update', editingClientId), {
+        editForm.patch(route('clients.update', { company: currentCompany.slug, clientId: editingClientId }), {
             onSuccess: () => cancelEdit(),
         });
     };
 
     const deleteClient = (client) => {
-        if (!confirm(`Supprimer le client "${client.name}" ?`)) return;
-        router.delete(route('clients.destroy', client.id));
+        setDeletingClient(client);
+    };
+
+    const confirmDelete = () => {
+        if (!deletingClient) return;
+        router.delete(route('clients.destroy', { company: currentCompany.slug, clientId: deletingClient.id }), {
+            onSuccess: () => setDeletingClient(null),
+            onError: () => setDeletingClient(null)
+        });
     };
 
     const columns = [
@@ -148,7 +159,7 @@ export default function ClientsIndex({ clients }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <a
-                            href={route('export.clients')}
+                            href={route('export.clients', { company: currentCompany.slug })}
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
                             <Icons.Download className="h-4 w-4" />
@@ -171,9 +182,16 @@ export default function ClientsIndex({ clients }) {
             <Head title="Clients" />
 
             <div className="space-y-6">
-                {flash?.status && (
-                    <Alert type="success" message={flash.status} />
-                )}
+                {/* Flash Message Toast */}
+                <AnimatePresence>
+                    {flash?.status && (
+                        <Toast 
+                            message={flash.status} 
+                            type="success"
+                            onClose={() => router.reload({ only: [] })}
+                        />
+                    )}
+                </AnimatePresence>
 
                 {/* Formulaire de création */}
                 <AnimatePresence>
@@ -201,6 +219,7 @@ export default function ClientsIndex({ clients }) {
                                         placeholder="Ex: Transport Dupont"
                                         required
                                         icon={Icons.Clients}
+                                        helperText={null}
                                     />
 
                                     <FormInput
@@ -208,7 +227,10 @@ export default function ClientsIndex({ clients }) {
                                         value={createForm.data.code}
                                         onChange={(e) => createForm.setData('code', e.target.value)}
                                         error={createForm.errors.code}
-                                        placeholder="Ex: CLI-001"
+                                        placeholder="Généré automatiquement"
+                                        disabled
+                                        helperText="Le code sera généré automatiquement au format CL-YYYY-NNNN"
+                                        icon={null}
                                     />
 
                                     <FormInput
@@ -218,6 +240,8 @@ export default function ClientsIndex({ clients }) {
                                         onChange={(e) => createForm.setData('email', e.target.value)}
                                         error={createForm.errors.email}
                                         placeholder="contact@example.com"
+                                        helperText={null}
+                                        icon={null}
                                     />
 
                                     <FormInput
@@ -226,6 +250,8 @@ export default function ClientsIndex({ clients }) {
                                         onChange={(e) => createForm.setData('phone', e.target.value)}
                                         error={createForm.errors.phone}
                                         placeholder="+33 1 23 45 67 89"
+                                        helperText={null}
+                                        icon={null}
                                     />
                                 </div>
 
@@ -251,6 +277,7 @@ export default function ClientsIndex({ clients }) {
                                             type="button"
                                             variant="secondary"
                                             onClick={() => setShowCreateForm(false)}
+                                            icon={null}
                                         >
                                             Annuler
                                         </Button>
@@ -294,6 +321,7 @@ export default function ClientsIndex({ clients }) {
                                         error={editForm.errors.name}
                                         required
                                         icon={Icons.Clients}
+                                        helperText={null}
                                     />
 
                                     <FormInput
@@ -301,6 +329,9 @@ export default function ClientsIndex({ clients }) {
                                         value={editForm.data.code}
                                         onChange={(e) => editForm.setData('code', e.target.value)}
                                         error={editForm.errors.code}
+                                        disabled
+                                        helperText="Le code client ne peut pas être modifié"
+                                        icon={null}
                                     />
 
                                     <FormInput
@@ -309,6 +340,8 @@ export default function ClientsIndex({ clients }) {
                                         value={editForm.data.email}
                                         onChange={(e) => editForm.setData('email', e.target.value)}
                                         error={editForm.errors.email}
+                                        helperText={null}
+                                        icon={null}
                                     />
 
                                     <FormInput
@@ -316,6 +349,8 @@ export default function ClientsIndex({ clients }) {
                                         value={editForm.data.phone}
                                         onChange={(e) => editForm.setData('phone', e.target.value)}
                                         error={editForm.errors.phone}
+                                        icon={null}
+                                        helperText={null}
                                     />
                                 </div>
 
@@ -340,6 +375,7 @@ export default function ClientsIndex({ clients }) {
                                             type="button"
                                             variant="secondary"
                                             onClick={cancelEdit}
+                                            icon={null}
                                         >
                                             Annuler
                                         </Button>
@@ -380,6 +416,7 @@ export default function ClientsIndex({ clients }) {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => startEdit(row)}
+                                    icon={null}
                                 >
                                     Modifier
                                 </Button>
@@ -387,6 +424,7 @@ export default function ClientsIndex({ clients }) {
                                     size="sm"
                                     variant="danger"
                                     onClick={() => deleteClient(row)}
+                                    icon={null}
                                 >
                                     Supprimer
                                 </Button>
@@ -401,6 +439,17 @@ export default function ClientsIndex({ clients }) {
                     )}
                 </motion.section>
             </div>
+
+            <ConfirmDialog
+                isOpen={!!deletingClient}
+                title="Supprimer le client"
+                message={`Êtes-vous sûr de vouloir supprimer le client "${deletingClient?.name}" ? Cette action est irréversible.`}
+                confirmText="Supprimer"
+                cancelText="Annuler"
+                variant="danger"
+                onConfirm={confirmDelete}
+                onCancel={() => setDeletingClient(null)}
+            />
         </AuthenticatedLayout>
     );
 }

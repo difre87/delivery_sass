@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Badge from '@/Components/Badge';
@@ -9,6 +9,9 @@ import { useCurrency } from '@/hooks/useCurrency';
 
 export default function ShowInvoice({ invoice }) {
     const { format: formatCurrency } = useCurrency();
+    const page = usePage<any>();
+    const { currentCompany } = page.props.auth;
+    
     const getStatusBadge = (status) => {
         const variants = {
             draft: 'default',
@@ -31,24 +34,24 @@ export default function ShowInvoice({ invoice }) {
 
     const handleMarkAsPaid = () => {
         if (confirm('Marquer cette facture comme payée ?')) {
-            router.post(route('invoices.mark-paid', invoice.id));
+            router.post(route('invoices.mark-paid', { company: currentCompany.slug, invoiceId: invoice.id }));
         }
     };
 
     const handleSend = () => {
         if (confirm('Envoyer cette facture au client ?')) {
-            router.post(route('invoices.send', invoice.id));
+            router.post(route('invoices.send', { company: currentCompany.slug, invoiceId: invoice.id }));
         }
     };
 
     const handleDelete = () => {
         if (confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
-            router.delete(route('invoices.destroy', invoice.id));
+            router.delete(route('invoices.destroy', { company: currentCompany.slug, invoiceId: invoice.id }));
         }
     };
 
     const handleStatusChange = (newStatus) => {
-        router.patch(route('invoices.update', invoice.id), {
+        router.patch(route('invoices.update', { company: currentCompany.slug, invoiceId: invoice.id }), {
             status: newStatus,
             notes: invoice.notes,
         });
@@ -68,7 +71,7 @@ export default function ShowInvoice({ invoice }) {
                     </div>
                     <div className="flex items-center space-x-3">
                         <a
-                            href={route('invoices.pdf', invoice.id)}
+                            href={route('invoices.pdf', { company: currentCompany.slug, invoiceId: invoice.id })}
                             target="_blank"
                             rel="noopener noreferrer"
                         >
@@ -318,7 +321,7 @@ export default function ShowInvoice({ invoice }) {
                                             </Button>
                                         )}
                                         <a
-                                            href={route('invoices.pdf', invoice.id)}
+                                            href={route('invoices.pdf', { company: currentCompany.slug, invoiceId: invoice.id })}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="block"

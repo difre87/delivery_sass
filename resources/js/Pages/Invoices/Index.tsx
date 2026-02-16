@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import DataTable from '@/Components/DataTable';
@@ -12,6 +12,8 @@ import { useCurrency } from '@/hooks/useCurrency';
 
 export default function InvoicesIndex({ invoices, stats, filters }) {
     const { format: formatCurrency } = useCurrency();
+    const page = usePage<any>();
+    const { currentCompany } = page.props.auth;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
 
@@ -45,7 +47,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
     };
 
     const handleSearch = () => {
-        router.get(route('invoices.index'), 
+        router.get(route('invoices.index', { company: currentCompany.slug }), 
             { search, status },
             { preserveState: true, preserveScroll: true }
         );
@@ -53,7 +55,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
 
     const handleDelete = (invoice) => {
         if (confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
-            router.delete(route('invoices.destroy', invoice.id));
+            router.delete(route('invoices.destroy', { company: currentCompany.slug, invoiceId: invoice.id }));
         }
     };
 
@@ -63,7 +65,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
             label: 'Numéro', 
             render: (invoice) => (
                 <Link
-                    href={route('invoices.show', invoice.id)}
+                    href={route('invoices.show', { company: currentCompany.slug, invoiceId: invoice.id })}
                     className="font-semibold text-emerald-600 hover:text-emerald-700"
                 >
                     {invoice.invoice_number}
@@ -107,13 +109,13 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
             render: (invoice) => (
                 <div className="flex items-center space-x-2">
                     <Link
-                        href={route('invoices.show', invoice.id)}
+                        href={route('invoices.show', { company: currentCompany.slug, invoiceId: invoice.id })}
                         className="text-emerald-600 hover:text-emerald-700"
                     >
                         <Icons.Eye className="h-5 w-5" />
                     </Link>
                     <a
-                        href={route('invoices.pdf', invoice.id)}
+                        href={route('invoices.pdf', { company: currentCompany.slug, invoiceId: invoice.id })}
                         target="_blank"
                         className="text-blue-600 hover:text-blue-700"
                     >
@@ -139,13 +141,13 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                     </h2>
                     <div className="flex items-center gap-3">
                         <a
-                            href={route('export.invoices')}
+                            href={route('export.invoices', { company: currentCompany.slug })}
                             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
                             <Icons.Download className="h-4 w-4" />
                             <span>Exporter CSV</span>
                         </a>
-                        <Link href={route('invoices.create')}>
+                        <Link href={route('invoices.create', { company: currentCompany.slug })}>
                             <Button
                                 variant="primary"
                                 icon={Icons.Plus}
@@ -225,6 +227,8 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                                 onChange={(e) => setSearch(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                 icon={Icons.Search}
+                                error={null}
+                                helperText={null}
                             />
                             <FormSelect
                                 label="Statut"
@@ -232,9 +236,10 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                                 onChange={(e) => setStatus(e.target.value)}
                                 options={statusOptions}
                                 icon={Icons.Filter}
+                                error={null}
                             />
                             <div className="flex items-end">
-                                <Button onClick={handleSearch} className="w-full">
+                                <Button onClick={handleSearch} className="w-full" icon={null}>
                                     Filtrer
                                 </Button>
                             </div>
@@ -252,6 +257,7 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                             data={invoices.data}
                             emptyIcon={Icons.FileText}
                             emptyMessage="Aucune facture trouvée"
+                            actions={null}
                         />
 
                         {/* Pagination */}
