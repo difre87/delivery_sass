@@ -14,6 +14,7 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\WaybillController;
+use App\Http\Controllers\ExportController;
 use App\Models\Plan;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -38,12 +39,24 @@ Route::get('/', function () {
             ])
         : collect();
 
+    // Statistiques globales de la plateforme
+    $stats = [
+        'total_companies' => Schema::hasTable('companies') ? \App\Models\Company::count() : 0,
+        'total_shipments' => Schema::hasTable('shipments') ? \App\Models\Shipment::count() : 0,
+        'total_vehicles' => Schema::hasTable('vehicles') ? \App\Models\Vehicle::count() : 0,
+        'total_drivers' => Schema::hasTable('drivers') ? \App\Models\Driver::count() : 0,
+        'active_subscriptions' => Schema::hasTable('subscriptions') 
+            ? \App\Models\Subscription::where('status', 'active')->count() 
+            : 0,
+    ];
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
         'plans' => $plans,
+        'platformStats' => $stats,
     ]);
 });
 
@@ -137,6 +150,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/plans', [SubscriptionController::class, 'index'])->name('plans.index');
         Route::post('/subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
         Route::delete('/subscriptions/current', [SubscriptionController::class, 'destroy'])->name('subscriptions.destroy');
+        
+        // CSV Exports
+        Route::get('/export/clients', [ExportController::class, 'clients'])->name('export.clients');
+        Route::get('/export/drivers', [ExportController::class, 'drivers'])->name('export.drivers');
+        Route::get('/export/shipments', [ExportController::class, 'shipments'])->name('export.shipments');
+        Route::get('/export/vehicles', [ExportController::class, 'vehicles'])->name('export.vehicles');
+        Route::get('/export/fuel', [ExportController::class, 'fuelLogs'])->name('export.fuel');
+        Route::get('/export/invoices', [ExportController::class, 'invoices'])->name('export.invoices');
+        Route::get('/export/waybills', [ExportController::class, 'waybills'])->name('export.waybills');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

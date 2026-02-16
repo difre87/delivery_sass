@@ -5,8 +5,17 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { useEffect } from 'react';
+import type { PageProps } from './types';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+// Extend Window interface
+declare global {
+    interface Window {
+        inertiaProps: PageProps | null;
+        route: typeof route;
+    }
+}
 
 // Variable globale pour stocker les props courantes
 window.inertiaProps = null;
@@ -37,27 +46,27 @@ createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
         resolvePageComponent(
-            `./Pages/${name}.jsx`,
-            import.meta.glob('./Pages/**/*.jsx'),
+            `./Pages/${name}.tsx`,
+            import.meta.glob('./Pages/**/*.tsx'),
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
         
         // Mettre à jour les props globales immédiatement
-        window.inertiaProps = props.initialPage.props;
+        window.inertiaProps = props.initialPage.props as any;
 
         // Créer un wrapper pour mettre à jour les props de manière synchrone
-        const AppWrapper = (appProps) => {
+        const AppWrapper = (appProps: any) => {
             // Mettre à jour les props avec useEffect pour garantir la mise à jour avant le rendu des enfants
             useEffect(() => {
                 if (appProps?.initialPage?.props) {
-                    window.inertiaProps = appProps.initialPage.props;
+                    window.inertiaProps = appProps.initialPage.props as any;
                 }
             }, [appProps]);
 
             // Aussi mettre à jour de manière synchrone
             if (appProps?.initialPage?.props) {
-                window.inertiaProps = appProps.initialPage.props;
+                window.inertiaProps = appProps.initialPage.props as any;
             }
 
             return <App {...appProps} />;

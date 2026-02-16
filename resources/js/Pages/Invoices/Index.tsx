@@ -137,15 +137,24 @@ export default function InvoicesIndex({ invoices, stats, filters }) {
                     <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                         Factures
                     </h2>
-                    <Link href={route('invoices.create')}>
-                        <Button
-                            variant="primary"
-                            icon={Icons.Plus}
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                    <div className="flex items-center gap-3">
+                        <a
+                            href={route('export.invoices')}
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
-                            Nouvelle facture
-                        </Button>
-                    </Link>
+                            <Icons.Download className="h-4 w-4" />
+                            <span>Exporter CSV</span>
+                        </a>
+                        <Link href={route('invoices.create')}>
+                            <Button
+                                variant="primary"
+                                icon={Icons.Plus}
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                            >
+                                Nouvelle facture
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             }
         >

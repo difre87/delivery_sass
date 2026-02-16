@@ -1,122 +1,18 @@
 import { Head, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
-
-const navItems = [
-    { label: 'Modules', href: '#modules' },
-    { label: 'Tarifs', href: '#pricing' },
-    { label: 'Intégrations', href: '#integrations' },
-    { label: 'FAQ', href: '#faq' },
-];
-
-const features = [
-    {
-        title: 'Exploitation livraisons',
-        description:
-            'Planifie les tournées, assigne chauffeurs et véhicules, et suis chaque livraison en temps réel.',
-    },
-    {
-        title: 'Bordereaux intelligents',
-        description:
-            'Génère automatiquement les bordereaux avec QR code, preuve de livraison et historique complet.',
-    },
-    {
-        title: 'Gestion du parc',
-        description:
-            'Centralise véhicules, entretiens, disponibilités et alertes de maintenance.',
-    },
-    {
-        title: 'Kilométrage & carburant',
-        description:
-            'Saisis les relevés odomètre, contrôle la consommation et calcule le coût réel par tournée.',
-    },
-    {
-        title: 'Pilotage multi-sociétés',
-        description:
-            'Architecture SaaS multi-tenant pour isoler les données et gérer plusieurs entreprises.',
-    },
-    {
-        title: 'Rentabilité & KPI',
-        description:
-            'Visualise marge, km à vide, retards et performance opérationnelle par client ou période.',
-    },
-];
-
-const stats = [
-    { label: 'Livraisons', value: 'Suivi en continu' },
-    { label: 'Parc roulant', value: 'Vue centralisée' },
-    { label: 'Coûts', value: 'Analyse par tournée' },
-];
-
-const testimonials = [
-    {
-        quote:
-            'On a réduit nos kilomètres à vide en 3 semaines grâce à la vue tournée + carburant.',
-        author: 'Nadia B.',
-        role: 'Responsable exploitation, TransExpress',
-    },
-    {
-        quote:
-            'Les bordereaux unifiés ont supprimé nos erreurs de facturation et accéléré la clôture mensuelle.',
-        author: 'Karim L.',
-        role: 'Directeur opérationnel, FastColis',
-    },
-    {
-        quote:
-            'Le modèle SaaS multi-sociétés nous permet de piloter plusieurs entités sans mélange de données.',
-        author: 'Julien M.',
-        role: 'CEO, LogiFleet Group',
-    },
-];
-
-const integrations = ['Paiement manuel', 'API REST', 'Webhooks', 'Exports CSV/Excel', 'Email & SMS', 'Stockage S3'];
-
-const proofLogos = ['TransExpress', 'FastColis', 'LogiFleet', 'UrbanDrop', 'CargoLink'];
-
-const proofStats = [
-    { label: 'Livraisons à l’heure', value: '+24%' },
-    { label: 'Coût carburant / km', value: '-17%' },
-    { label: 'Marge opérationnelle', value: '+18%' },
-];
-
-const faqs = [
-    {
-        q: 'Est-ce que chaque entreprise a ses données isolées ?',
-        a: 'Oui. Chaque compte travaille dans sa propre société avec isolation multi-tenant.',
-    },
-    {
-        q: 'Puis-je commencer sans installer une app mobile native ?',
-        a: 'Oui. Une interface web/PWA suffit pour lancer les opérations chauffeurs rapidement.',
-    },
-    {
-        q: 'Le SaaS gère-t-il la facturation des clients finaux ?',
-        a: 'Oui, avec calcul des coûts, génération des lignes et exports pour la comptabilité.',
-    },
-    {
-        q: 'Peut-on connecter un système externe ?',
-        a: 'Oui, via API et webhooks pour synchroniser commandes, clients et statuts.',
-    },
-];
-
-const formatPrice = (plan) => {
-    if (plan.price_cents === 0) {
-        return 'Gratuit';
-    }
-
-    return `${(plan.price_cents / 100).toLocaleString('fr-FR')}€`;
-};
-
-const fadeInUp = {
-    hidden: { opacity: 0, y: 24 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.55,
-            ease: [0.22, 1, 0.36, 1],
-        },
-    },
-};
+import {
+    navItems,
+    features,
+    stats,
+    testimonials,
+    integrations,
+    proofLogos,
+    proofStats,
+    faqs,
+    fadeInUp,
+    formatPrice,
+} from '../types/data';
 
 export default function Welcome({ auth, plans = [], flash }) {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -127,14 +23,28 @@ export default function Welcome({ auth, plans = [], flash }) {
         <>
             <Head title="Delivery SaaS" />
 
-            <div className="min-h-screen bg-slate-950 text-slate-100">
-                <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur">
+            <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+                {/* Background decoration */}
+                <div className="pointer-events-none fixed inset-0 overflow-hidden">
+                    <div className="absolute -top-[40%] left-[10%] h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[120px]" />
+                    <div className="absolute right-[15%] top-[20%] h-[300px] w-[300px] rounded-full bg-cyan-500/10 blur-[100px]" />
+                    <div className="absolute bottom-[10%] left-[30%] h-[400px] w-[400px] rounded-full bg-blue-500/10 blur-[120px]" />
+                </div>
+
+                <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl shadow-lg shadow-black/5">
                     <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:px-8">
-                        <div>
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-emerald-300">Delivery SaaS</p>
-                            <h1 className="mt-1 text-sm font-semibold text-white sm:text-base">
-                                Plateforme de gestion des livraisons
-                            </h1>
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 shadow-lg shadow-emerald-500/25">
+                                <svg className="h-6 w-6 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-[11px] uppercase tracking-[0.22em] text-emerald-300">Delivery SaaS</p>
+                                <h1 className="mt-0.5 text-sm font-semibold text-white sm:text-base">
+                                    Plateforme de gestion
+                                </h1>
+                            </div>
                         </div>
 
                         <button
@@ -255,18 +165,35 @@ export default function Welcome({ auth, plans = [], flash }) {
                                 <p className="inline-flex rounded-full border border-emerald-400/35 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
                                     SaaS multi-tenant pour transporteurs, coursiers et 3PL
                                 </p>
-                                <h2 className="mt-5 text-4xl font-semibold leading-tight text-white sm:text-6xl">
-                                    Augmente ta marge livraison avec une plateforme pensée business
+                                <h2 className="mt-5 bg-gradient-to-br from-white via-slate-100 to-slate-300 bg-clip-text text-5xl font-bold leading-tight text-transparent sm:text-7xl">
+                                    Augmente ta marge livraison
                                 </h2>
-                                <p className="mt-5 text-base text-slate-300">
-                                    Centralise exploitation, bordereaux, flotte, kilométrage et carburant pour réduire
-                                    les coûts opérationnels, améliorer la ponctualité et professionnaliser ton service client.
+                                <p className="mt-6 text-lg leading-relaxed text-slate-300">
+                                    Centralise exploitation, bordereaux, flotte, kilométrage et carburant pour{' '}
+                                    <span className="font-semibold text-emerald-300">réduire les coûts</span>,{' '}
+                                    <span className="font-semibold text-cyan-300">améliorer la ponctualité</span> et{' '}
+                                    <span className="font-semibold text-blue-300">professionnaliser ton service</span>.
                                 </p>
 
-                                <div className="mt-5 flex flex-wrap gap-2 text-xs text-slate-200">
-                                    <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5">Setup rapide</span>
-                                    <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5">Données isolées par société</span>
-                                    <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5">Pilotage orienté rentabilité</span>
+                                <div className="mt-6 flex flex-wrap gap-2.5 text-xs">
+                                    <span className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-2 font-medium text-slate-100 backdrop-blur">
+                                        <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Setup rapide
+                                    </span>
+                                    <span className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-2 font-medium text-slate-100 backdrop-blur">
+                                        <svg className="h-4 w-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                        Données isolées
+                                    </span>
+                                    <span className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-2 font-medium text-slate-100 backdrop-blur">
+                                        <svg className="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                        Rentabilité en temps réel
+                                    </span>
                                 </div>
 
                                 <div className="mt-8 flex flex-wrap gap-3">
@@ -283,7 +210,7 @@ export default function Welcome({ auth, plans = [], flash }) {
                                             href={route('register')}
                                             className="rounded-md bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
                                         >
-                                            Démarrer l’essai
+                                            Démarrer l'essai
                                         </Link>
                                             <Link
                                                 href={route('login')}
@@ -506,7 +433,7 @@ export default function Welcome({ auth, plans = [], flash }) {
                                                 : 'Véhicules illimités'}
                                         </p>
                                         {plan.trial_days > 0 && (
-                                            <p className="mt-2 text-xs text-emerald-200">{plan.trial_days} jours d’essai</p>
+                                            <p className="mt-2 text-xs text-emerald-200">{plan.trial_days} jours d'essai</p>
                                         )}
                                         <ul className="mt-4 space-y-2 text-sm text-slate-200">
                                             {(plan.features || []).map((item) => (
@@ -562,7 +489,7 @@ export default function Welcome({ auth, plans = [], flash }) {
                                         href={route('subscriptions.destroy')}
                                         className="inline-flex rounded-md border border-rose-300/30 px-4 py-2 text-sm font-semibold text-rose-200 transition hover:bg-rose-400/10"
                                     >
-                                        Résilier l’abonnement actuel
+                                        Résilier l'abonnement actuel
                                     </Link>
                                 </motion.div>
                             )}
@@ -589,7 +516,7 @@ export default function Welcome({ auth, plans = [], flash }) {
                                         transition={{ delay: 0.08 * index }}
                                         className="rounded-xl border border-white/10 bg-white/5 p-5"
                                     >
-                                        <p className="text-sm leading-relaxed text-slate-200">“{item.quote}”</p>
+                                        <p className="text-sm leading-relaxed text-slate-200">"{item.quote}"</p>
                                         <p className="mt-4 text-sm font-semibold text-white">{item.author}</p>
                                         <p className="text-xs text-slate-400">{item.role}</p>
                                     </motion.article>

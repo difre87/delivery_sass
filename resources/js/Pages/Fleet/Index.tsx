@@ -164,16 +164,25 @@ export default function FleetIndex({ vehicles, branches = [] }) {
                             </p>
                         </div>
                     </div>
-                    <Button
-                        variant="primary"
-                        icon={Icons.Plus}
-                        onClick={() => {
-                            setShowCreateForm(!showCreateForm);
-                            setEditingVehicleId(null);
-                        }}
-                    >
-                        {showCreateForm ? 'Annuler' : 'Nouveau véhicule'}
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <a
+                            href={route('export.vehicles')}
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
+                        >
+                            <Icons.Download className="h-4 w-4" />
+                            <span>Exporter CSV</span>
+                        </a>
+                        <Button
+                            variant="primary"
+                            icon={Icons.Plus}
+                            onClick={() => {
+                                setShowCreateForm(!showCreateForm);
+                                setEditingVehicleId(null);
+                            }}
+                        >
+                            {showCreateForm ? 'Annuler' : 'Nouveau véhicule'}
+                        </Button>
+                    </div>
                 </div>
             }
         >

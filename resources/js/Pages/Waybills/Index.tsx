@@ -157,15 +157,24 @@ export default function WaybillsIndex({ waybills, stats, filters }) {
                     <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                         Bordereaux de livraison
                     </h2>
-                    <Link href={route('waybills.create')}>
-                        <Button
-                            variant="primary"
-                            icon={Icons.Plus}
-                            className="bg-gradient-to-r from-purple-600 to-pink-600"
+                    <div className="flex items-center gap-3">
+                        <a
+                            href={route('export.waybills')}
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md"
                         >
-                            Nouveau bordereau
-                        </Button>
-                    </Link>
+                            <Icons.Download className="h-4 w-4" />
+                            <span>Exporter CSV</span>
+                        </a>
+                        <Link href={route('waybills.create')}>
+                            <Button
+                                variant="primary"
+                                icon={Icons.Plus}
+                                className="bg-gradient-to-r from-purple-600 to-pink-600"
+                            >
+                                Nouveau bordereau
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             }
         >
