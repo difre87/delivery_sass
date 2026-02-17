@@ -37,13 +37,14 @@ const initialForm = {
     cost_cents: '',
     price_cents: '',
     notes: '',
+    package_ids: [],
 };
 
 const getStatusConfig = (status) => {
     return statusOptions.find(s => s.value === status) || statusOptions[0];
 };
 
-export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
+export default function ShipmentsIndex({ shipments, clients, branches = [], availablePackages = [] }) {
     const flash = usePage<any>().props.flash;
     const currentCompany = usePage<any>().props.auth.currentCompany;
     const { symbol } = useCurrency();
@@ -59,7 +60,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
 
     const submitCreate = (e) => {
         e.preventDefault();
-        createForm.post(route('shipments.store'), {
+        createForm.post(route('shipments.store', { company: currentCompany.slug }), {
             onSuccess: () => {
                 createForm.reset();
                 setShowCreateForm(false);
@@ -83,6 +84,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
             cost_cents: shipment.cost_cents ?? '',
             price_cents: shipment.price_cents ?? '',
             notes: shipment.notes ?? '',
+            package_ids: shipment.packages?.map(pkg => pkg.id) || [],
         });
     };
 
@@ -95,7 +97,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
     const submitEdit = (e) => {
         e.preventDefault();
         if (!editingShipmentId) return;
-        editForm.patch(route('shipments.update', editingShipmentId), {
+        editForm.patch(route('shipments.update', { company: currentCompany.slug, shipment: editingShipmentId }), {
             onSuccess: () => cancelEdit(),
         });
     };
@@ -106,7 +108,7 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
 
     const confirmDelete = () => {
         if (deletingShipment) {
-            router.delete(route('shipments.destroy', deletingShipment.id));
+            router.delete(route('shipments.destroy', { company: currentCompany.slug, shipment: deletingShipment.id }));
             setDeletingShipment(null);
         }
     };
@@ -357,6 +359,53 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                                 placeholder="Instructions spéciales, remarques..."
                                             />
                                         </div>
+
+                                        {/* Package Selection */}
+                                        {availablePackages.length > 0 && (
+                                            <div className="md:col-span-2 lg:col-span-3">
+                                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                    Colis à associer ({availablePackages.length} disponibles)
+                                                </label>
+                                                <div className="space-y-2 max-h-48 overflow-y-auto rounded-lg border border-slate-200 p-3 bg-slate-50">
+                                                    {availablePackages.map((pkg) => (
+                                                        <label key={pkg.id} className="flex items-start gap-3 p-2 hover:bg-white rounded cursor-pointer transition-colors">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={createForm.data.package_ids.includes(pkg.id)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        createForm.setData('package_ids', [...createForm.data.package_ids, pkg.id]);
+                                                                    } else {
+                                                                        createForm.setData('package_ids', createForm.data.package_ids.filter(id => id !== pkg.id));
+                                                                    }
+                                                                }}
+                                                                className="mt-1 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                                            />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-mono text-sm font-medium text-slate-900">
+                                                                        {pkg.tracking_number}
+                                                                    </span>
+                                                                    <Badge variant="slate" size="sm">
+                                                                        {pkg.type}
+                                                                    </Badge>
+                                                                </div>
+                                                                {pkg.description && (
+                                                                    <p className="text-xs text-slate-600 mt-0.5 truncate">
+                                                                        {pkg.description}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                {createForm.data.package_ids.length > 0 && (
+                                                    <p className="text-sm text-amber-600 mt-2">
+                                                        {createForm.data.package_ids.length} colis sélectionné(s)
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="mt-6 flex justify-end gap-3">
@@ -500,6 +549,101 @@ export default function ShipmentsIndex({ shipments, clients, branches = [] }) {
                                                 error={editForm.errors.notes}
                                                 rows={3}
                                             />
+                                        </div>
+
+                                        {/* Package Selection for Edit */}
+                                        <div className="md:col-span-2 lg:col-span-3">
+                                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                Colis associés
+                                            </label>
+                                            
+                                            {/* Available packages to add */}
+                                            {availablePackages.length > 0 && (
+                                                <div className="mb-3">
+                                                    <p className="text-xs text-slate-600 mb-2">Colis disponibles ({availablePackages.length})</p>
+                                                    <div className="space-y-2 max-h-32 overflow-y-auto rounded-lg border border-slate-200 p-3 bg-slate-50">
+                                                        {availablePackages.map((pkg) => (
+                                                            <label key={pkg.id} className="flex items-start gap-3 p-2 hover:bg-white rounded cursor-pointer transition-colors">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={editForm.data.package_ids.includes(pkg.id)}
+                                                                    onChange={(e) => {
+                                                                        if (e.target.checked) {
+                                                                            editForm.setData('package_ids', [...editForm.data.package_ids, pkg.id]);
+                                                                        } else {
+                                                                            editForm.setData('package_ids', editForm.data.package_ids.filter(id => id !== pkg.id));
+                                                                        }
+                                                                    }}
+                                                                    className="mt-1 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                                                />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-mono text-sm font-medium text-slate-900">
+                                                                            {pkg.tracking_number}
+                                                                        </span>
+                                                                        <Badge variant="slate" size="sm">
+                                                                            {pkg.type}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    {pkg.description && (
+                                                                        <p className="text-xs text-slate-600 mt-0.5 truncate">
+                                                                            {pkg.description}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Currently associated packages */}
+                                            {rows.find(s => s.id === editingShipmentId)?.packages?.length > 0 && (
+                                                <div>
+                                                    <p className="text-xs text-slate-600 mb-2">
+                                                        Colis déjà associés ({rows.find(s => s.id === editingShipmentId)?.packages?.length})
+                                                    </p>
+                                                    <div className="space-y-2 rounded-lg border border-emerald-200 p-3 bg-emerald-50">
+                                                        {rows.find(s => s.id === editingShipmentId)?.packages?.map((pkg) => (
+                                                            <label key={pkg.id} className="flex items-start gap-3 p-2 bg-white rounded cursor-pointer transition-colors">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={editForm.data.package_ids.includes(pkg.id)}
+                                                                    onChange={(e) => {
+                                                                        if (e.target.checked) {
+                                                                            editForm.setData('package_ids', [...editForm.data.package_ids, pkg.id]);
+                                                                        } else {
+                                                                            editForm.setData('package_ids', editForm.data.package_ids.filter(id => id !== pkg.id));
+                                                                        }
+                                                                    }}
+                                                                    className="mt-1 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                                                                />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-mono text-sm font-medium text-slate-900">
+                                                                            {pkg.tracking_number}
+                                                                        </span>
+                                                                        <Badge variant="emerald" size="sm">
+                                                                            {pkg.type}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    {pkg.description && (
+                                                                        <p className="text-xs text-slate-600 mt-0.5 truncate">
+                                                                            {pkg.description}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {editForm.data.package_ids.length > 0 && (
+                                                <p className="text-sm text-amber-600 mt-2">
+                                                    {editForm.data.package_ids.length} colis sélectionné(s)
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 

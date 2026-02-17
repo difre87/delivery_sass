@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import FormInput from '@/Components/FormInput';
@@ -8,13 +8,15 @@ import Alert from '@/Components/Alert';
 import { Icons } from '@/Components/Icons';
 
 export default function CompanySettings({ company, flash }) {
+    const { auth } = usePage<any>().props;
+    const currentCompany = auth.currentCompany;
     const [logoPreview, setLogoPreview] = useState(
         company.logo ? `/storage/${company.logo}` : null
     );
 
     const tabs = [
-        { name: 'Entreprise', href: route('settings.company'), current: true },
-        { name: 'Agences', href: route('settings.branches'), current: false },
+        { name: 'Entreprise', href: route('settings.company', { company: currentCompany.slug }), current: true },
+        { name: 'Agences', href: route('settings.branches', { company: currentCompany.slug }), current: false },
     ];
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -38,7 +40,7 @@ export default function CompanySettings({ company, flash }) {
             setData('logo', file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setLogoPreview(reader.result);
+                setLogoPreview(reader.result as string);
             };
             reader.readAsDataURL(file);
         }
@@ -47,7 +49,7 @@ export default function CompanySettings({ company, flash }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        post(route('settings.company.update'), {
+        post(route('settings.company.update', { company: currentCompany.slug }), {
             forceFormData: true,
             preserveScroll: true,
             transform: (data) => {
@@ -59,7 +61,7 @@ export default function CompanySettings({ company, flash }) {
                 // Reload to get updated company data including in shared props
                 router.reload({ only: ['company'] });
             },
-        });
+        } as any);
     };
 
     return (
@@ -106,7 +108,7 @@ export default function CompanySettings({ company, flash }) {
                             <Alert
                                 type="success"
                                 message={flash.success}
-                                dismissible
+                                onClose={() => router.reload({ only: [] })}
                             />
                         </motion.div>
                     )}

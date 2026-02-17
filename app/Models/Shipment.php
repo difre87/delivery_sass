@@ -142,4 +142,12 @@ class Shipment extends Model
     {
         return $this->hasMany(InvoiceItem::class);
     }
+
+    /**
+     * @return HasMany<Package, $this>
+     */
+    public function packages(): HasMany
+    {
+        return $this->hasMany(Package::class);
+    }
 }

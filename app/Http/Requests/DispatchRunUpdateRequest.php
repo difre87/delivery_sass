@@ -32,8 +32,11 @@ class DispatchRunUpdateRequest extends FormRequest
             'driver_id' => [
                 'required',
                 'integer',
-                Rule::exists('company_user', 'user_id')
-                    ->where(fn ($query) => $query->where('company_id', $this->user()->current_company_id)),
+                Rule::exists('drivers', 'id')
+                    ->where(fn ($query) => $query
+                        ->where('company_id', $this->user()->current_company_id)
+                        ->where('is_active', true)
+                    ),
             ],
             'vehicle_id' => [
                 'nullable',

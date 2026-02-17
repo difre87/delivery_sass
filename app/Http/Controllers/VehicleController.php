@@ -49,10 +49,10 @@ class VehicleController extends Controller
             'company_id' => $company->id,
         ]);
 
-        return redirect()->route('fleet.index')->with('status', 'Véhicule créé avec succès.');
+        return redirect()->route('fleet.index', ['company' => $company->slug])->with('status', 'Véhicule créé avec succès.');
     }
 
-    public function update(VehicleUpdateRequest $request, Vehicle $vehicle): RedirectResponse
+    public function update(VehicleUpdateRequest $request, string $company, Vehicle $vehicle): RedirectResponse
     {
         $this->ensureVehicleBelongsToCurrentCompany($request, $vehicle);
 
@@ -65,16 +65,16 @@ class VehicleController extends Controller
             'current_odometer' => $odometer,
         ]);
 
-        return redirect()->route('fleet.index')->with('status', 'Véhicule mis à jour.');
+        return redirect()->route('fleet.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Véhicule mis à jour.');
     }
 
-    public function destroy(Request $request, Vehicle $vehicle): RedirectResponse
+    public function destroy(Request $request, string $company, Vehicle $vehicle): RedirectResponse
     {
         $this->ensureVehicleBelongsToCurrentCompany($request, $vehicle);
 
         $vehicle->delete();
 
-        return redirect()->route('fleet.index')->with('status', 'Véhicule supprimé.');
+        return redirect()->route('fleet.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Véhicule supprimé.');
     }
 
     private function ensureVehicleBelongsToCurrentCompany(Request $request, Vehicle $vehicle): void

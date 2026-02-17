@@ -73,12 +73,15 @@ class CompanyBranchController extends Controller
         // Assigner automatiquement l'utilisateur actuel à la nouvelle agence
         $request->user()->branches()->attach($branch->id, ['is_default' => false]);
 
-        return redirect()->route('settings.branches')->with('status', 'Agence créée avec succès.');
+        return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence créée avec succès.');
     }
 
-    public function update(Request $request, Branch $branch): RedirectResponse
+    public function update(Request $request, string $branchId): RedirectResponse
     {
+        $branch = Branch::findOrFail($branchId);
         $this->ensureBranchBelongsToCurrentCompany($request, $branch);
+        
+        $company = $request->user()->currentCompany;
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -89,11 +92,12 @@ class CompanyBranchController extends Controller
 
         $branch->update($validated);
 
-        return redirect()->route('settings.branches')->with('status', 'Agence mise à jour.');
+        return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence mise à jour.');
     }
 
-    public function destroy(Request $request, Branch $branch): RedirectResponse
+    public function destroy(Request $request, string $branchId): RedirectResponse
     {
+        $branch = Branch::findOrFail($branchId);
         $this->ensureBranchBelongsToCurrentCompany($request, $branch);
 
         // Vérifier qu'il reste au moins une agence
@@ -101,23 +105,23 @@ class CompanyBranchController extends Controller
         $branchCount = Branch::forCompany($company->id)->count();
         
         if ($branchCount <= 1) {
-            return redirect()->route('settings.branches')
+            return redirect()->route('settings.branches', ['company' => $company->slug])
                 ->withErrors(['delete' => 'Impossible de supprimer la dernière agence.']);
         }
 
         if ($branch->shipments()->count() > 0) {
-            return redirect()->route('settings.branches')
+            return redirect()->route('settings.branches', ['company' => $company->slug])
                 ->withErrors(['delete' => 'Impossible de supprimer une agence qui a des livraisons associées.']);
         }
 
         if ($branch->users()->count() > 0) {
-            return redirect()->route('settings.branches')
+            return redirect()->route('settings.branches', ['company' => $company->slug])
                 ->withErrors(['delete' => 'Impossible de supprimer une agence qui a des utilisateurs assignés. Réassignez-les d\'abord.']);
         }
 
         $branch->delete();
 
-        return redirect()->route('settings.branches')->with('status', 'Agence supprimée.');
+        return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence supprimée.');
     }
 
     private function ensureBranchBelongsToCurrentCompany(Request $request, Branch $branch): void

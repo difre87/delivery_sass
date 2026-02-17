@@ -57,7 +57,7 @@ export default function FleetIndex({ vehicles, branches = [] }) {
 
     const submitCreate = (e) => {
         e.preventDefault();
-        createForm.post(route('fleet.store'), { 
+        createForm.post(route('fleet.store', { company: currentCompany.slug }), { 
             onSuccess: () => {
                 createForm.reset();
                 setShowCreateForm(false);
@@ -90,7 +90,7 @@ export default function FleetIndex({ vehicles, branches = [] }) {
     const submitEdit = (e) => {
         e.preventDefault();
         if (!editingVehicleId) return;
-        editForm.patch(route('fleet.update', editingVehicleId), { onSuccess: () => cancelEdit() });
+        editForm.patch(route('fleet.update', { company: currentCompany.slug, vehicle: editingVehicleId }), { onSuccess: () => cancelEdit() });
     };
 
     const deleteVehicle = (vehicle) => {
@@ -99,7 +99,7 @@ export default function FleetIndex({ vehicles, branches = [] }) {
 
     const confirmDelete = () => {
         if (deletingVehicle) {
-            router.delete(route('fleet.destroy', deletingVehicle.id));
+            router.delete(route('fleet.destroy', { company: currentCompany.slug, vehicle: deletingVehicle.id }));
             setDeletingVehicle(null);
         }
     };

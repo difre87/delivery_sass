@@ -46,7 +46,7 @@ Route::get('/', function () {
         'total_companies' => Schema::hasTable('companies') ? \App\Models\Company::count() : 0,
         'total_shipments' => Schema::hasTable('shipments') ? \App\Models\Shipment::count() : 0,
         'total_vehicles' => Schema::hasTable('vehicles') ? \App\Models\Vehicle::count() : 0,
-        'total_drivers' => Schema::hasTable('drivers') ? \App\Models\Driver::count() : 0,
+        'total_drivers' => Schema::hasTable('drivers') ? \App\Models\Driver::where('is_active', true)->count() : 0,
         'active_subscriptions' => Schema::hasTable('subscriptions') 
             ? \App\Models\Subscription::where('status', 'active')->count() 
             : 0,
@@ -117,6 +117,14 @@ Route::middleware('auth')->group(function () {
         Route::patch('/shipments/{shipment}', [ShipmentController::class, 'update'])->name('shipments.update');
         Route::delete('/shipments/{shipment}', [ShipmentController::class, 'destroy'])->name('shipments.destroy');
         
+        // Packages (Colis)
+        Route::get('/packages', [\App\Http\Controllers\PackageController::class, 'index'])->name('packages.index');
+        Route::get('/packages/create', [\App\Http\Controllers\PackageController::class, 'create'])->name('packages.create');
+        Route::post('/packages', [\App\Http\Controllers\PackageController::class, 'store'])->name('packages.store');
+        Route::get('/packages/{packageId}/edit', [\App\Http\Controllers\PackageController::class, 'edit'])->name('packages.edit');
+        Route::patch('/packages/{packageId}', [\App\Http\Controllers\PackageController::class, 'update'])->name('packages.update');
+        Route::delete('/packages/{packageId}', [\App\Http\Controllers\PackageController::class, 'destroy'])->name('packages.destroy');
+        
         // Routes (Dispatch Runs)
         Route::get('/routes', [DispatchRunController::class, 'index'])->name('routes.index');
         Route::post('/routes', [DispatchRunController::class, 'store'])->name('routes.store');
@@ -164,8 +172,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');
         Route::get('/settings/branches', [\App\Http\Controllers\CompanyBranchController::class, 'index'])->name('settings.branches');
         Route::post('/settings/branches', [\App\Http\Controllers\CompanyBranchController::class, 'store'])->name('settings.branches.store');
-        Route::patch('/settings/branches/{branch}', [\App\Http\Controllers\CompanyBranchController::class, 'update'])->name('settings.branches.update');
-        Route::delete('/settings/branches/{branch}', [\App\Http\Controllers\CompanyBranchController::class, 'destroy'])->name('settings.branches.destroy');
+        Route::patch('/settings/branches/{branchId}', [\App\Http\Controllers\CompanyBranchController::class, 'update'])->name('settings.branches.update');
+        Route::delete('/settings/branches/{branchId}', [\App\Http\Controllers\CompanyBranchController::class, 'destroy'])->name('settings.branches.destroy');
         
         // Branch Switching
         Route::post('/switch-branch/{branchId}', \App\Http\Controllers\SwitchBranchController::class)->name('branch.switch');

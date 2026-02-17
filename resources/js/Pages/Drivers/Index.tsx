@@ -15,9 +15,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const initialForm = {
     name: '',
-    email: '',
     phone: '',
-    password: '',
+    identity_document_type: '',
+    identity_document_number: '',
+    license_type: '',
+    license_number: '',
+    license_expires_at: '',
     is_active: true,
     vehicle_id: '',
 };
@@ -31,6 +34,7 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [assigningDriverId, setAssigningDriverId] = useState(null);
     const [deletingDriver, setDeletingDriver] = useState<any>(null);
+    const [unassigningDriver, setUnassigningDriver] = useState<any>(null);
 
     const createForm = useForm(initialForm);
     const editForm = useForm(initialForm);
@@ -51,7 +55,7 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
 
     const submitCreate = (e) => {
         e.preventDefault();
-        createForm.post(route('drivers.store'), {
+        createForm.post(route('drivers.store', { company: currentCompany.slug }), {
             onSuccess: () => {
                 createForm.reset();
                 setShowCreateForm(false);
@@ -64,9 +68,12 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
         setShowCreateForm(false);
         editForm.setData({
             name: driver.name ?? '',
-            email: driver.email ?? '',
             phone: driver.phone ?? '',
-            password: '',
+            identity_document_type: driver.identity_document_type ?? '',
+            identity_document_number: driver.identity_document_number ?? '',
+            license_type: driver.license_type ?? '',
+            license_number: driver.license_number ?? '',
+            license_expires_at: driver.license_expires_at ? driver.license_expires_at.split(' ')[0] : '',
             is_active: Boolean(driver.is_active),
             vehicle_id: currentVehicle(driver)?.id ?? '',
         });
@@ -81,7 +88,7 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
     const submitEdit = (e) => {
         e.preventDefault();
         if (!editingDriverId) return;
-        editForm.patch(route('drivers.update', editingDriverId), {
+        editForm.patch(route('drivers.update', { company: currentCompany.slug, driver: editingDriverId }), {
             onSuccess: () => cancelEdit(),
         });
     };
@@ -92,7 +99,7 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
 
     const confirmDelete = () => {
         if (deletingDriver) {
-            router.delete(route('drivers.destroy', deletingDriver.id));
+            router.delete(route('drivers.destroy', { company: currentCompany.slug, driver: deletingDriver.id }));
             setDeletingDriver(null);
         }
     };
@@ -110,14 +117,20 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
     const submitAssign = (e) => {
         e.preventDefault();
         if (!assigningDriverId) return;
-        assignForm.post(route('drivers.assign', assigningDriverId), {
+        assignForm.post(route('drivers.assign', { company: currentCompany.slug, driver: assigningDriverId }), {
             onSuccess: () => cancelAssign(),
         });
     };
 
     const unassign = (driver) => {
-        if (!confirm(`Retirer le véhicule de "${driver.name}" ?`)) return;
-        router.delete(route('drivers.unassign', driver.id));
+        setUnassigningDriver(driver);
+    };
+
+    const confirmUnassign = () => {
+        if (unassigningDriver) {
+            router.delete(route('drivers.unassign', { company: currentCompany.slug, driver: unassigningDriver.id }));
+            setUnassigningDriver(null);
+        }
     };
 
     const columns = [
@@ -131,7 +144,7 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
                     </div>
                     <div>
                         <p className="font-bold text-slate-900">{row.name}</p>
-                        <p className="text-xs text-slate-500">{row.email}</p>
+                        <p className="text-xs text-slate-500">{row.phone || '—'}</p>
                     </div>
                 </div>
             ),
@@ -140,6 +153,29 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
             key: 'phone',
             label: 'Téléphone',
             render: (row) => row.phone || '—',
+        },
+        {
+            key: 'identity_document',
+            label: 'Pièce d\'identité',
+            render: (row) => {
+                if (!row.identity_document_type) {
+                    return <span className="text-slate-400">Non renseignée</span>;
+                }
+                const typeLabels = {
+                    passport: 'Passeport',
+                    cni: 'CNI',
+                    carte_consulaire: 'Carte consulaire',
+                    extrait_naissance: 'Extrait de naissance',
+                };
+                return (
+                    <div className="text-sm">
+                        <p className="font-medium text-slate-700">{typeLabels[row.identity_document_type] || row.identity_document_type}</p>
+                        {row.identity_document_number && (
+                            <p className="text-xs text-slate-500">{row.identity_document_number}</p>
+                        )}
+                    </div>
+                );
+            },
         },
         {
             key: 'vehicle',
@@ -250,40 +286,80 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
                                     />
 
                                     <FormInput
-                                        label="Email"
-                                        type="email"
-                                        value={createForm.data.email}
-                                        onChange={(e) => createForm.setData('email', e.target.value)}
-                                        error={createForm.errors.email}
-                                        placeholder="jean@example.com"
-                                        required
-                                    />
-
-                                    <FormInput
                                         label="Téléphone"
                                         value={createForm.data.phone}
                                         onChange={(e) => createForm.setData('phone', e.target.value)}
                                         error={createForm.errors.phone}
                                         placeholder="+33 6 12 34 56 78"
-                                    />
-
-                                    <FormInput
-                                        label="Mot de passe"
-                                        type="password"
-                                        value={createForm.data.password}
-                                        onChange={(e) => createForm.setData('password', e.target.value)}
-                                        error={createForm.errors.password}
-                                        placeholder="••••••••"
                                         required
                                     />
 
                                     <FormSelect
-                                        label="Véhicule initial"
+                                        label="Type de pièce justificative"
+                                        value={createForm.data.identity_document_type}
+                                        onChange={(e) => createForm.setData('identity_document_type', e.target.value)}
+                                        error={createForm.errors.identity_document_type}
+                                        options={[
+                                            { value: '', label: 'Sélectionner...' },
+                                            { value: 'passport', label: 'Passeport' },
+                                            { value: 'cni', label: 'CNI' },
+                                            { value: 'carte_consulaire', label: 'Carte consulaire' },
+                                            { value: 'extrait_naissance', label: 'Extrait de naissance' },
+                                        ]}
+                                    />
+
+                                    <FormInput
+                                        label="Numéro de pièce"
+                                        value={createForm.data.identity_document_number}
+                                        onChange={(e) => createForm.setData('identity_document_number', e.target.value)}
+                                        error={createForm.errors.identity_document_number}
+                                        placeholder="Ex: AB123456"
+                                    />
+
+                                    <FormSelect
+                                        label="Type de permis"
+                                        value={createForm.data.license_type}
+                                        onChange={(e) => createForm.setData('license_type', e.target.value)}
+                                        error={createForm.errors.license_type}
+                                        options={[
+                                            { value: '', label: 'Sélectionner...' },
+                                            { value: 'A', label: 'Permis A - Moto' },
+                                            { value: 'A1', label: 'Permis A1 - Motocyclette légère' },
+                                            { value: 'B', label: 'Permis B - Voiture' },
+                                            { value: 'C', label: 'Permis C - Poids lourd' },
+                                            { value: 'D', label: 'Permis D - Transport en commun' },
+                                            { value: 'E', label: 'Permis E - Remorque' },
+                                            { value: 'ABCDE', label: 'Toutes catégories' },
+                                        ]}
+                                        required
+                                    />
+
+                                    <FormInput
+                                        label="Numéro de permis"
+                                        value={createForm.data.license_number}
+                                        onChange={(e) => createForm.setData('license_number', e.target.value)}
+                                        error={createForm.errors.license_number}
+                                        placeholder="Ex: 12345678"
+                                        required
+                                    />
+
+                                    <FormInput
+                                        label="Date d'expiration du permis"
+                                        type="date"
+                                        value={createForm.data.license_expires_at}
+                                        onChange={(e) => createForm.setData('license_expires_at', e.target.value)}
+                                        error={createForm.errors.license_expires_at}
+                                        required
+                                    />
+
+                                    <FormSelect
+                                        label="Véhicule"
                                         value={createForm.data.vehicle_id}
                                         onChange={(e) => createForm.setData('vehicle_id', e.target.value)}
                                         error={createForm.errors.vehicle_id}
                                         options={vehicleOptions}
                                         icon={Icons.Fleet}
+                                        required
                                     />
                                 </div>
 
@@ -346,28 +422,69 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
                                     />
 
                                     <FormInput
-                                        label="Email"
-                                        type="email"
-                                        value={editForm.data.email}
-                                        onChange={(e) => editForm.setData('email', e.target.value)}
-                                        error={editForm.errors.email}
-                                        required
-                                    />
-
-                                    <FormInput
                                         label="Téléphone"
                                         value={editForm.data.phone}
                                         onChange={(e) => editForm.setData('phone', e.target.value)}
                                         error={editForm.errors.phone}
+                                        required
+                                    />
+
+                                    <FormSelect
+                                        label="Type de pièce justificative"
+                                        value={editForm.data.identity_document_type}
+                                        onChange={(e) => editForm.setData('identity_document_type', e.target.value)}
+                                        error={editForm.errors.identity_document_type}
+                                        options={[
+                                            { value: '', label: 'Sélectionner...' },
+                                            { value: 'passport', label: 'Passeport' },
+                                            { value: 'cni', label: 'CNI' },
+                                            { value: 'carte_consulaire', label: 'Carte consulaire' },
+                                            { value: 'extrait_naissance', label: 'Extrait de naissance' },
+                                        ]}
                                     />
 
                                     <FormInput
-                                        label="Nouveau mot de passe"
-                                        type="password"
-                                        value={editForm.data.password}
-                                        onChange={(e) => editForm.setData('password', e.target.value)}
-                                        error={editForm.errors.password}
-                                        placeholder="Laisser vide pour ne pas changer"
+                                        label="Numéro de pièce"
+                                        value={editForm.data.identity_document_number}
+                                        onChange={(e) => editForm.setData('identity_document_number', e.target.value)}
+                                        error={editForm.errors.identity_document_number}
+                                        placeholder="Ex: AB123456"
+                                    />
+
+                                    <FormSelect
+                                        label="Type de permis"
+                                        value={editForm.data.license_type}
+                                        onChange={(e) => editForm.setData('license_type', e.target.value)}
+                                        error={editForm.errors.license_type}
+                                        options={[
+                                            { value: '', label: 'Sélectionner...' },
+                                            { value: 'A', label: 'Permis A - Moto' },
+                                            { value: 'A1', label: 'Permis A1 - Motocyclette légère' },
+                                            { value: 'B', label: 'Permis B - Voiture' },
+                                            { value: 'C', label: 'Permis C - Poids lourd' },
+                                            { value: 'D', label: 'Permis D - Transport en commun' },
+                                            { value: 'E', label: 'Permis E - Remorque' },
+                                            { value: 'ABCDE', label: 'Toutes catégories' },
+                                        ]}
+                                        required
+                                    />
+
+                                    <FormInput
+                                        label="Numéro de permis"
+                                        value={editForm.data.license_number}
+                                        onChange={(e) => editForm.setData('license_number', e.target.value)}
+                                        error={editForm.errors.license_number}
+                                        placeholder="Ex: 12345678"
+                                        required
+                                    />
+
+                                    <FormInput
+                                        label="Date d'expiration du permis"
+                                        type="date"
+                                        value={editForm.data.license_expires_at}
+                                        onChange={(e) => editForm.setData('license_expires_at', e.target.value)}
+                                        error={editForm.errors.license_expires_at}
+                                        required
                                     />
 
                                     <FormSelect
@@ -528,6 +645,16 @@ export default function DriversIndex({ drivers, vehicles = [] }) {
                 confirmText="Retirer"
                 onConfirm={confirmDelete}
                 onCancel={() => setDeletingDriver(null)}
+            />
+
+            {/* Confirm Unassign Vehicle Dialog */}
+            <ConfirmDialog
+                isOpen={!!unassigningDriver}
+                title="Retirer le véhicule"
+                message={unassigningDriver ? `Êtes-vous sûr de vouloir retirer le véhicule de "${unassigningDriver.name}" ?` : ''}
+                confirmText="Retirer le véhicule"
+                onConfirm={confirmUnassign}
+                onCancel={() => setUnassigningDriver(null)}
             />
         </AuthenticatedLayout>
     );

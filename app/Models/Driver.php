@@ -17,9 +17,13 @@ class Driver extends Model
      */
     protected $fillable = [
         'company_id',
+        'branch_id',
         'user_id',
         'name',
         'phone',
+        'identity_document_type',
+        'identity_document_number',
+        'license_type',
         'license_number',
         'license_expires_at',
         'is_active',
@@ -31,7 +35,7 @@ class Driver extends Model
     protected function casts(): array
     {
         return [
-            'license_expires_at' => 'date',
+            'license_expires_at' => 'date:Y-m-d',
             'is_active' => 'boolean',
         ];
     }
@@ -42,6 +46,14 @@ class Driver extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Branch, $this>
+     */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     /**
@@ -66,5 +78,13 @@ class Driver extends Model
     public function odometerLogs(): HasMany
     {
         return $this->hasMany(OdometerLog::class);
+    }
+
+    /**
+     * @return HasMany<VehicleAssignment, $this>
+     */
+    public function vehicleAssignments(): HasMany
+    {
+        return $this->hasMany(VehicleAssignment::class);
     }
 }

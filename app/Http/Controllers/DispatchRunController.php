@@ -39,18 +39,16 @@ class DispatchRunController extends Controller
             ->orderBy('plate_number')
             ->get(['id', 'plate_number']);
 
-        $drivers = User::query()
-            ->whereHas('companies', fn ($query) => 
-                $query->where('companies.id', $company->id)
-                      ->where('company_user.role', 'driver')
-            )
+        $drivers = \App\Models\Driver::query()
+            ->where('company_id', $company->id)
+            ->where('is_active', true)
             ->with(['vehicleAssignments' => fn($query) => 
                 $query->whereNull('ends_at')
                       ->with('vehicle:id,plate_number,make,model')
                       ->latest()
             ])
             ->orderBy('name')
-            ->get(['users.id', 'users.name']);
+            ->get(['id', 'name']);
 
         $shipments = Shipment::query()
             ->forCompany($company->id)
@@ -67,7 +65,7 @@ class DispatchRunController extends Controller
         ]);
     }
 
-    public function store(DispatchRunStoreRequest $request): RedirectResponse
+    public function store(DispatchRunStoreRequest $request, string $company): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -78,10 +76,10 @@ class DispatchRunController extends Controller
 
         $dispatchRun->shipments()->sync($validated['shipment_ids'] ?? []);
 
-        return redirect()->route('routes.index')->with('status', 'Tournée créée avec succès.');
+        return redirect()->route('routes.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Tournée créée avec succès.');
     }
 
-    public function update(DispatchRunUpdateRequest $request, DispatchRun $dispatchRun): RedirectResponse
+    public function update(DispatchRunUpdateRequest $request, string $company, DispatchRun $dispatchRun): RedirectResponse
     {
         $this->ensureDispatchRunBelongsToCurrentCompany($request, $dispatchRun);
 
@@ -90,16 +88,16 @@ class DispatchRunController extends Controller
         $dispatchRun->update(collect($validated)->except('shipment_ids')->toArray());
         $dispatchRun->shipments()->sync($validated['shipment_ids'] ?? []);
 
-        return redirect()->route('routes.index')->with('status', 'Tournée mise à jour.');
+        return redirect()->route('routes.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Tournée mise à jour.');
     }
 
-    public function destroy(Request $request, DispatchRun $dispatchRun): RedirectResponse
+    public function destroy(Request $request, string $company, DispatchRun $dispatchRun): RedirectResponse
     {
         $this->ensureDispatchRunBelongsToCurrentCompany($request, $dispatchRun);
 
         $dispatchRun->delete();
 
-        return redirect()->route('routes.index')->with('status', 'Tournée supprimée.');
+        return redirect()->route('routes.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Tournée supprimée.');
     }
 
     private function ensureDispatchRunBelongsToCurrentCompany(Request $request, DispatchRun $dispatchRun): void

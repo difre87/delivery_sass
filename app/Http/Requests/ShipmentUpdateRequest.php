@@ -53,6 +53,12 @@ class ShipmentUpdateRequest extends FormRequest
             'cost_cents' => ['nullable', 'integer', 'min:0'],
             'price_cents' => ['nullable', 'integer', 'min:0'],
             'notes' => ['nullable', 'string', 'max:4000'],
+            'package_ids' => ['nullable', 'array'],
+            'package_ids.*' => [
+                'integer',
+                Rule::exists('packages', 'id')
+                    ->where(fn ($query) => $query->where('company_id', $this->user()->current_company_id)),
+            ],
         ];
     }
 }

@@ -1,13 +1,18 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Icons } from '@/Components/Icons';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import Toast from '@/Components/Toast';
 
 export default function Branches({ branches, canAddMore, limitReached }) {
+    const { auth, flash, errors } = usePage<any>().props;
+    const currentCompany = auth.currentCompany;
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingBranch, setEditingBranch] = useState(null);
+    const [deletingBranch, setDeletingBranch] = useState<any>(null);
 
     const createForm = useForm({
         name: '',
@@ -24,13 +29,13 @@ export default function Branches({ branches, canAddMore, limitReached }) {
     });
 
     const tabs = [
-        { name: 'Entreprise', href: route('settings.company') },
-        { name: 'Agences', href: route('settings.branches'), current: true },
+        { name: 'Entreprise', href: route('settings.company', { company: currentCompany.slug }) },
+        { name: 'Agences', href: route('settings.branches', { company: currentCompany.slug }), current: true },
     ];
 
     const handleCreate = (e) => {
         e.preventDefault();
-        createForm.post(route('settings.branches.store'), {
+        createForm.post(route('settings.branches.store', { company: currentCompany.slug }), {
             onSuccess: () => {
                 setShowCreateModal(false);
                 createForm.reset();
@@ -40,7 +45,7 @@ export default function Branches({ branches, canAddMore, limitReached }) {
 
     const handleEdit = (e) => {
         e.preventDefault();
-        editForm.put(route('settings.branches.update', editingBranch.id), {
+        editForm.patch(route('settings.branches.update', { company: currentCompany.slug, branchId: editingBranch.id }), {
             onSuccess: () => {
                 setShowEditModal(false);
                 setEditingBranch(null);
@@ -61,8 +66,13 @@ export default function Branches({ branches, canAddMore, limitReached }) {
     };
 
     const handleDelete = (branch) => {
-        if (confirm(`Êtes-vous sûr de vouloir supprimer l'agence "${branch.name}" ?`)) {
-            router.delete(route('settings.branches.destroy', branch.id));
+        setDeletingBranch(branch);
+    };
+
+    const confirmDelete = () => {
+        if (deletingBranch) {
+            router.delete(route('settings.branches.destroy', { company: currentCompany.slug, branchId: deletingBranch.id }));
+            setDeletingBranch(null);
         }
     };
 
@@ -75,6 +85,31 @@ export default function Branches({ branches, canAddMore, limitReached }) {
             }
         >
             <Head title="Agences" />
+
+            {/* Flash Message Toast */}
+            <AnimatePresence>
+                {flash?.status && (
+                    <Toast 
+                        message={flash.status} 
+                        type="success"
+                        onClose={() => router.reload({ only: [] })}
+                    />
+                )}
+                {errors?.delete && (
+                    <Toast 
+                        message={errors.delete} 
+                        type="error"
+                        onClose={() => router.reload({ only: [] })}
+                    />
+                )}
+                {errors?.limit && (
+                    <Toast 
+                        message={errors.limit} 
+                        type="error"
+                        onClose={() => router.reload({ only: [] })}
+                    />
+                )}
+            </AnimatePresence>
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -409,6 +444,16 @@ export default function Branches({ branches, canAddMore, limitReached }) {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={!!deletingBranch}
+                title="Supprimer l'agence"
+                message={deletingBranch ? `Êtes-vous sûr de vouloir supprimer l'agence "${deletingBranch.name}" ? Cette action est irréversible.` : ''}
+                confirmText="Supprimer"
+                onConfirm={confirmDelete}
+                onCancel={() => setDeletingBranch(null)}
+            />
         </AuthenticatedLayout>
     );
 }

@@ -88,6 +88,7 @@ class AnalyticsController extends Controller
 
         // Driver stats with real performance metrics
         $driverStats = $company->drivers()
+            ->where('is_active', true)
             ->select('drivers.id', 'drivers.name')
             ->selectRaw('COUNT(DISTINCT dispatch_runs.id) as deliveries')
             ->leftJoin('dispatch_runs', function($join) use ($startDate) {

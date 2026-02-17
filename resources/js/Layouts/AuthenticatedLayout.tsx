@@ -49,6 +49,12 @@ export default function AuthenticatedLayout({ header, children }) {
             icon: Icons.Shipments,
         },
         {
+            name: 'Colis',
+            href: route('packages.index', { company: companySlug }),
+            active: route().current('packages.*'),
+            icon: Icons.Package,
+        },
+        {
             name: 'Tournées',
             href: route('routes.index', { company: companySlug }),
             active: route().current('routes.*'),

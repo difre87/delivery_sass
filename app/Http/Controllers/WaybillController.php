@@ -9,6 +9,7 @@ use App\Models\Driver;
 use App\Models\Vehicle;
 use App\Models\Shipment;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -91,7 +92,12 @@ class WaybillController extends Controller
 
         $validated = $request->validate([
             'dispatch_run_id' => ['nullable', 'exists:dispatch_runs,id'],
-            'driver_id' => ['required', 'exists:drivers,id'],
+            'driver_id' => [
+                'required', 
+                Rule::exists('drivers', 'id')
+                    ->where('company_id', $company->id)
+                    ->where('is_active', true)
+            ],
             'vehicle_id' => ['required', 'exists:vehicles,id'],
             'date' => ['required', 'date'],
             'departure_time' => ['nullable', 'date_format:H:i'],

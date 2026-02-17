@@ -61,7 +61,7 @@ class FuelLogController extends Controller
         return redirect()->route('fuel.index')->with('status', 'Plein carburant enregistré.');
     }
 
-    public function update(FuelLogUpdateRequest $request, FuelLog $fuelLog): RedirectResponse
+    public function update(FuelLogUpdateRequest $request, string $company, FuelLog $fuelLog): RedirectResponse
     {
         $this->ensureFuelLogBelongsToCurrentCompany($request, $fuelLog);
 
@@ -80,7 +80,7 @@ class FuelLogController extends Controller
         return redirect()->route('fuel.index')->with('status', 'Plein carburant mis à jour.');
     }
 
-    public function destroy(Request $request, FuelLog $fuelLog): RedirectResponse
+    public function destroy(Request $request, string $company, FuelLog $fuelLog): RedirectResponse
     {
         $this->ensureFuelLogBelongsToCurrentCompany($request, $fuelLog);
 

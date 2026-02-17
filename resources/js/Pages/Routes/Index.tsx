@@ -9,8 +9,9 @@ import FormCheckbox from '@/Components/FormCheckbox';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
-import Alert from '@/Components/Alert';
+import Toast from '@/Components/Toast';
 import Badge from '@/Components/Badge';
+import ConfirmDialog from '@/Components/ConfirmDialog';
 
 const statusOptions = [
     { value: 'planned', label: 'Planifiée', color: 'blue' },
@@ -35,9 +36,10 @@ const getStatusConfig = (status) => {
 };
 
 export default function RoutesIndex({ runs, branches = [], vehicles = [], drivers = [], shipments = [] }) {
-    const flash = usePage().props.flash;
+    const { flash, auth } = usePage().props as any;
     const [editingRunId, setEditingRunId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [deletingRun, setDeletingRun] = useState(null);
     
     const createForm = useForm(initialForm);
     const editForm = useForm(initialForm);
@@ -47,7 +49,7 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
 
     const submitCreate = (e) => {
         e.preventDefault();
-        createForm.post(route('routes.store'), { 
+        createForm.post(route('routes.store', { company: auth.user.current_company.slug }), { 
             onSuccess: () => {
                 createForm.reset();
                 setShowCreateForm(false);
@@ -76,12 +78,18 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
     const submitEdit = (e) => {
         e.preventDefault();
         if (!editingRunId) return;
-        editForm.patch(route('routes.update', editingRunId), { onSuccess: () => cancelEdit() });
+        editForm.patch(route('routes.update', { company: auth.user.current_company.slug, dispatchRun: editingRunId }), { onSuccess: () => cancelEdit() });
     };
 
     const deleteRun = (run) => {
-        if (!confirm(`Supprimer la tournée #${run.id} ?`)) return;
-        router.delete(route('routes.destroy', run.id));
+        setDeletingRun(run);
+    };
+
+    const confirmDelete = () => {
+        if (!deletingRun) return;
+        router.delete(route('routes.destroy', { company: auth.user.current_company.slug, dispatchRun: deletingRun.id }), {
+            onFinish: () => setDeletingRun(null)
+        });
     };
 
     const toggleShipment = (form, shipmentId) => {
@@ -149,13 +157,19 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
             label: 'Statut',
             render: (run) => {
                 const config = getStatusConfig(run.status);
-                return <Badge color={config.color}>{config.label}</Badge>;
+                return <Badge variant={config.color}>{config.label}</Badge>;
             }
         },
     ];
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                    Tournées
+                </h2>
+            }
+        >
             <Head title="Tournées" />
             
             <div className="space-y-6">
@@ -180,12 +194,16 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                     </Button>
                 </div>
 
-                {/* Flash Message */}
-                {flash?.status && (
-                    <Alert type="success" onClose={() => router.reload({ only: [] })}>
-                        {flash.status}
-                    </Alert>
-                )}
+                {/* Flash Message Toast */}
+                <AnimatePresence>
+                    {flash?.status && (
+                        <Toast 
+                            message={flash.status} 
+                            type="success"
+                            onClose={() => router.reload({ only: [] })}
+                        />
+                    )}
+                </AnimatePresence>
 
                 {/* Create Form */}
                 <AnimatePresence>
@@ -286,6 +304,7 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                                                         <FormCheckbox
                                                             key={shipment.id}
                                                             label={`${shipmentLabel(shipment)} - ${shipment.recipient_name}`}
+                                                            description=""
                                                             checked={(createForm.data.shipment_ids ?? []).includes(shipment.id)}
                                                             onChange={() => toggleShipment(createForm, shipment.id)}
                                                         />
@@ -416,6 +435,7 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                                                         <FormCheckbox
                                                             key={shipment.id}
                                                             label={`${shipmentLabel(shipment)} - ${shipment.recipient_name}`}
+                                                            description=""
                                                             checked={(editForm.data.shipment_ids ?? []).includes(shipment.id)}
                                                             onChange={() => toggleShipment(editForm, shipment.id)}
                                                         />
@@ -476,6 +496,17 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                 {/* Pagination */}
                 {pagination.length > 0 && <Pagination links={pagination} />}
             </div>
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={!!deletingRun}
+                title="Supprimer la tournée"
+                message={`Êtes-vous sûr de vouloir supprimer la tournée #${deletingRun?.id} ? Cette action est irréversible.`}
+                confirmText="Supprimer"
+                cancelText="Annuler"
+                onConfirm={confirmDelete}
+                onCancel={() => setDeletingRun(null)}
+            />
         </AuthenticatedLayout>
     );
 }

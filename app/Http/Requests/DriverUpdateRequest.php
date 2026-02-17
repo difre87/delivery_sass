@@ -26,12 +26,15 @@ class DriverUpdateRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($driver)],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'password' => ['nullable', 'string', 'min:8'],
+            'phone' => ['required', 'string', 'max:50'],
+            'identity_document_type' => ['nullable', 'string', 'in:passport,cni,carte_consulaire,extrait_naissance'],
+            'identity_document_number' => ['nullable', 'string', 'max:100'],
+            'license_type' => ['required', 'string', 'in:A,A1,B,C,D,E,ABCDE'],
+            'license_number' => ['required', 'string', 'max:100'],
+            'license_expires_at' => ['required', 'date', 'after:today'],
             'is_active' => ['required', 'boolean'],
             'vehicle_id' => [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('vehicles', 'id')
                     ->where(fn ($query) => $query->where('company_id', $this->user()->current_company_id)),

@@ -76,7 +76,7 @@ export default function BranchSwitcher() {
                                 </div>
                             </div>
                             <a
-                                href={route('settings.branches')}
+                                href={route('settings.branches', { company: currentCompany.slug })}
                                 className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-md transition-colors"
                             >
                                 <Icons.Settings className="h-4 w-4" />
