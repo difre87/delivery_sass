@@ -101,7 +101,7 @@ export default function Index({ packages, filters }) {
             </AnimatePresence>
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl sm:px-6 lg:px-0">
                     {/* Filters */}
                     <div className="mb-6 rounded-xl bg-white p-6 shadow">
                         <form onSubmit={handleSearch} className="flex gap-4">

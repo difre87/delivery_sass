@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class SwitchBranchController extends Controller
 {
-    public function __invoke(Request $request, string $branchId): RedirectResponse
+    public function __invoke(Request $request, string $company, string $branchId): RedirectResponse
     {
         $user = $request->user();
         

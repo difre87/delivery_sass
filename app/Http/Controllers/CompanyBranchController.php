@@ -42,7 +42,7 @@ class CompanyBranchController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, string $company): RedirectResponse
     {
         $company = $request->user()->currentCompany;
         $subscription = $company->subscription;
@@ -76,7 +76,7 @@ class CompanyBranchController extends Controller
         return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence créée avec succès.');
     }
 
-    public function update(Request $request, string $branchId): RedirectResponse
+    public function update(Request $request, string $company, string $branchId): RedirectResponse
     {
         $branch = Branch::findOrFail($branchId);
         $this->ensureBranchBelongsToCurrentCompany($request, $branch);
@@ -95,7 +95,7 @@ class CompanyBranchController extends Controller
         return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence mise à jour.');
     }
 
-    public function destroy(Request $request, string $branchId): RedirectResponse
+    public function destroy(Request $request, string $company, string $branchId): RedirectResponse
     {
         $branch = Branch::findOrFail($branchId);
         $this->ensureBranchBelongsToCurrentCompany($request, $branch);

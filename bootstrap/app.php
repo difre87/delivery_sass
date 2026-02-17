@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'has-company' => \App\Http\Middleware\EnsureUserHasCompany::class,
             'company-slug' => \App\Http\Middleware\SetCompanyFromSlug::class,
+            'can' => \App\Http\Middleware\CheckPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

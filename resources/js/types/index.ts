@@ -248,11 +248,26 @@ export interface FlashMessage {
     message?: string;
 }
 
+export interface Permissions {
+    canAccessSettings: boolean;
+    canManageUsers: boolean;
+    canManageBranches: boolean;
+    canManageCompanySettings: boolean;
+    canManageDrivers: boolean;
+    canManageFleet: boolean;
+    canManageRoutes: boolean;
+    canManageClients: boolean;
+    canViewShipments: boolean;
+    canManageShipments: boolean;
+    canAccessAnalytics: boolean;
+}
+
 export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
     auth: {
         user: User;
         currentCompany?: Company;
     };
+    permissions?: Permissions;
     flash?: FlashMessage;
     errors?: Record<string, string>;
     ziggy?: {

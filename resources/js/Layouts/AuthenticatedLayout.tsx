@@ -6,12 +6,22 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 
+interface NavigationItem {
+    name: string;
+    href: string;
+    active: boolean;
+    icon: (props: any) => React.JSX.Element;
+    badge?: string;
+    highlight?: boolean;
+}
+
 export default function AuthenticatedLayout({ header, children }) {
     const page = usePage<any>();
     const { user, currentCompany } = page.props.auth;
+    const permissions = page.props.permissions || {};
     const companySlug = currentCompany?.slug;
     
-    const navigation = [
+    const navigation: NavigationItem[] = [
         {
             name: 'Dashboard',
             href: route('dashboard', { company: companySlug }),
@@ -84,28 +94,27 @@ export default function AuthenticatedLayout({ header, children }) {
             active: route().current('waybills.*'),
             icon: Icons.Clipboard,
         },
-        
-        {
+    ];
+
+    // Ajouter le menu Paramètres si l'utilisateur a la permission
+    if (permissions.canAccessSettings) {
+        navigation.push({
             name: 'Paramètres',
             href: route('settings.company', { company: companySlug }),
             active: route().current('settings.*'),
             icon: Icons.Settings,
-        },
-        /* {
-            name: 'Profil',
-            href: route('profile.edit'),
-            active: route().current('profile.*'),
-            icon: Icons.Profile,
-        }, */
-        {
-            name: 'Upgrade Plan',
-            href: route('plans.index', { company: companySlug }),
-            active: route().current('plans.*'),
-            icon: Icons.Currency,
-            badge: 'Pro',
-            highlight: true,
-        },
-    ];
+        });
+    }
+
+    // Ajouter le menu Upgrade
+    navigation.push({
+        name: 'Upgrade Plan',
+        href: route('plans.index', { company: companySlug }),
+        active: route().current('plans.*'),
+        icon: Icons.Currency,
+        badge: 'Pro',
+        highlight: true,
+    });
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 

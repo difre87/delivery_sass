@@ -31,6 +31,7 @@ export default function Branches({ branches, canAddMore, limitReached }) {
     const tabs = [
         { name: 'Entreprise', href: route('settings.company', { company: currentCompany.slug }) },
         { name: 'Agences', href: route('settings.branches', { company: currentCompany.slug }), current: true },
+        { name: 'Utilisateurs', href: route('settings.users', { company: currentCompany.slug }) },
     ];
 
     const handleCreate = (e) => {

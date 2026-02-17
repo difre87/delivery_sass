@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -65,6 +66,19 @@ class HandleInertiaRequests extends Middleware
                       ]
                     : null,
             ],
+            'permissions' => $user && $user->current_company_id ? [
+                'canAccessSettings' => Gate::allows('access-settings'),
+                'canManageUsers' => Gate::allows('manage-users'),
+                'canManageBranches' => Gate::allows('manage-branches'),
+                'canManageCompanySettings' => Gate::allows('manage-company-settings'),
+                'canManageDrivers' => Gate::allows('manage-drivers'),
+                'canManageFleet' => Gate::allows('manage-fleet'),
+                'canManageRoutes' => Gate::allows('manage-routes'),
+                'canManageClients' => Gate::allows('manage-clients'),
+                'canViewShipments' => Gate::allows('view-shipments'),
+                'canManageShipments' => Gate::allows('manage-shipments'),
+                'canAccessAnalytics' => Gate::allows('access-analytics'),
+            ] : [],
             'flash' => [
                 'status' => $request->session()->get('status'),
             ],

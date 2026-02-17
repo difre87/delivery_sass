@@ -14,8 +14,13 @@ export default function BranchSwitcher() {
 
     const switchBranch = (branchId) => {
         router.post(route('branch.switch', { company: currentCompany.slug, branchId: branchId }), {}, {
-            preserveScroll: true,
-            onSuccess: () => setIsOpen(false),
+            preserveScroll: false,
+            preserveState: false,
+            onSuccess: () => {
+                setIsOpen(false);
+                // Forcer le rechargement complet de la page pour actualiser toutes les données
+                router.reload();
+            },
         });
     };
 

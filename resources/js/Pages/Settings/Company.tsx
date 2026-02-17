@@ -17,6 +17,7 @@ export default function CompanySettings({ company, flash }) {
     const tabs = [
         { name: 'Entreprise', href: route('settings.company', { company: currentCompany.slug }), current: true },
         { name: 'Agences', href: route('settings.branches', { company: currentCompany.slug }), current: false },
+        { name: 'Utilisateurs', href: route('settings.users', { company: currentCompany.slug }), current: false },
     ];
 
     const { data, setData, post, processing, errors, reset } = useForm({
