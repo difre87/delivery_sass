@@ -23,6 +23,11 @@ class SetCompanyFromSlug
             return $next($request);
         }
 
+        // Les super admins peuvent accéder sans société
+        if ($user->is_super_admin) {
+            return $next($request);
+        }
+
         // Récupérer le slug de la société depuis l'URL
         $companySlug = $request->route('company');
 

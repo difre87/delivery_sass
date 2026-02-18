@@ -16,7 +16,7 @@ export default function TermsOfService() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
-                            <span className="text-lg font-bold text-white">Delivery SaaS</span>
+                            <span className="text-lg font-bold text-white">Fleetigo</span>
                         </Link>
 
                         <Link
@@ -46,7 +46,7 @@ export default function TermsOfService() {
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-4">1. Objet</h2>
                                 <p className="leading-relaxed">
-                                    Les présentes Conditions Générales d'Utilisation (ci-après « CGU ») ont pour objet de définir les modalités et conditions d'utilisation de la plateforme Delivery SaaS (ci-après « la Plateforme »), ainsi que les droits et obligations des utilisateurs.
+                                    Les présentes Conditions Générales d'Utilisation (ci-après « CGU ») ont pour objet de définir les modalités et conditions d'utilisation de la plateforme Fleetigo (ci-après « la Plateforme »), ainsi que les droits et obligations des utilisateurs.
                                 </p>
                             </section>
 
@@ -179,7 +179,7 @@ export default function TermsOfService() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
                                     </div>
-                                    <span className="text-xl font-bold text-white">Delivery SaaS</span>
+                                    <span className="text-xl font-bold text-white">Fleetigo</span>
                                 </div>
                                 <p className="text-slate-400 mb-6 max-w-md">
                                     La solution complète de gestion de livraisons pour optimiser vos tournées, 
@@ -243,7 +243,7 @@ export default function TermsOfService() {
 
                         {/* Copyright */}
                         <div className="mt-12 pt-8 border-t border-white/10 text-center text-sm text-slate-400">
-                            © 2026 Delivery SaaS. Tous droits réservés.
+                            © 2026 Fleetigo. Tous droits réservés.
                         </div>
                     </div>
                 </footer>

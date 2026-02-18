@@ -223,8 +223,45 @@ export interface Subscription {
     plan?: Plan;
 }
 
+export interface ActivityLog {
+    id: number;
+    user_id: number | null;
+    company_id: number;
+    branch_id: number | null;
+    action: string;
+    module: string;
+    subject_type: string | null;
+    subject_id: number | null;
+    description: string | null;
+    properties: any;
+    ip_address: string | null;
+    user_agent: string | null;
+    created_at: string;
+    updated_at: string;
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    branch?: {
+        id: number;
+        name: string;
+    };
+}
+
 export interface PaginatedData<T> {
     data: T[];
+    current_page: number;
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
     links: {
         url: string | null;
         label: string;

@@ -22,10 +22,23 @@ class SubscriptionController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        // Convertir les prix selon la devise de la société
+        $companyCurrency = $company?->currency ?? 'EUR';
+        $plans = $plans->map(function ($plan) use ($companyCurrency) {
+            $plan->price_cents = $this->convertCurrency($plan->price_cents, 'EUR', $companyCurrency);
+            return $plan;
+        });
+
+        // Convertir aussi le prix du plan actuel si présent
+        $currentPlan = $currentSubscription?->plan;
+        if ($currentPlan) {
+            $currentPlan->price_cents = $this->convertCurrency($currentPlan->price_cents, 'EUR', $companyCurrency);
+        }
+
         return Inertia::render('Plans/Index', [
             'plans' => $plans,
             'currentSubscription' => $currentSubscription,
-            'currentPlan' => $currentSubscription?->plan,
+            'currentPlan' => $currentPlan,
         ]);
     }
 
@@ -114,4 +127,51 @@ class SubscriptionController extends Controller
             default => null,
         };
     }
+
+    /**
+     * Convertir un montant en centimes d'une devise vers une autre
+     * Taux de change approximatifs (en production, utiliser une API de taux de change)
+     */
+    private function convertCurrency(int $amountCents, string $fromCurrency, string $toCurrency): int
+    {
+        if ($fromCurrency === $toCurrency) {
+            return $amountCents;
+        }
+
+        // Taux de conversion depuis EUR (base)
+        $rates = [
+            'EUR' => 1.0,
+            'USD' => 1.10,      // 1 EUR = 1.10 USD
+            'GBP' => 0.86,      // 1 EUR = 0.86 GBP
+            'MAD' => 11.00,     // 1 EUR = 11 MAD
+            'CHF' => 0.95,      // 1 EUR = 0.95 CHF
+            'CAD' => 1.45,      // 1 EUR = 1.45 CAD
+            'XOF' => 656.0,     // 1 EUR = 656 XOF (Franc CFA)
+        ];
+
+        $convertedAmount = 0;
+
+        // Conversion: EUR -> devise cible
+        if ($fromCurrency === 'EUR' && isset($rates[$toCurrency])) {
+            $convertedAmount = (int) round($amountCents * $rates[$toCurrency]);
+        }
+        // Conversion: devise source -> EUR -> devise cible
+        elseif (isset($rates[$fromCurrency]) && isset($rates[$toCurrency])) {
+            $inEur = $amountCents / $rates[$fromCurrency];
+            $convertedAmount = (int) round($inEur * $rates[$toCurrency]);
+        }
+        // Si devise non supportée, retourner le montant original
+        else {
+            return $amountCents;
+        }
+
+        // Arrondir le Franc CFA aux 100 FCFA les plus proches pour des prix plus propres
+        if ($toCurrency === 'XOF') {
+            // Arrondir aux 10000 centimes (100 FCFA) les plus proches
+            $convertedAmount = (int) (round($convertedAmount / 10000) * 10000);
+        }
+
+        return $convertedAmount;
+    }
 }
+

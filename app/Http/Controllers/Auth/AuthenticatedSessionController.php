@@ -35,6 +35,11 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
         
+        // Si l'utilisateur est super admin, rediriger vers le dashboard admin
+        if ($user->is_super_admin) {
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
+        
         // Si l'utilisateur a une société, rediriger vers le dashboard avec le slug
         if ($user->companies()->exists()) {
             $company = $user->currentCompany ?? $user->companies()->first();

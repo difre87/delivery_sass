@@ -21,6 +21,14 @@ class Branch extends Model
         'address',
         'city',
         'country',
+        'is_active',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     /**

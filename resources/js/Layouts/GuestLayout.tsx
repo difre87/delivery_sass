@@ -1,17 +1,17 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import { Link } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
-const panelMotion = {
+const panelMotion: Variants = {
     hidden: { opacity: 0, y: 24 },
     visible: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+        transition: { duration: 0.55, ease: 'easeInOut' },
     },
 };
 
-export default function GuestLayout({ title, subtitle, children }) {
+export default function GuestLayout({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
     return (
         <div className="relative min-h-screen overflow-hidden bg-slate-950">
             <motion.div
@@ -30,7 +30,7 @@ export default function GuestLayout({ title, subtitle, children }) {
                         <Link href="/" className="inline-flex items-center gap-3">
                             <ApplicationLogo className="h-10 w-10 fill-current text-emerald-300" />
                             <span className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-200">
-                                Delivery SaaS
+                                Fleetigo
                             </span>
                         </Link>
 
@@ -66,7 +66,7 @@ export default function GuestLayout({ title, subtitle, children }) {
                             <Link href="/" className="inline-flex items-center gap-2 text-slate-700 lg:hidden">
                                 <ApplicationLogo className="h-8 w-8 fill-current text-emerald-600" />
                                 <span className="text-xs font-semibold uppercase tracking-[0.2em]">
-                                    Delivery SaaS
+                                    Fleetigo
                                 </span>
                             </Link>
                             <h1 className="mt-4 text-2xl font-semibold text-slate-900">{title}</h1>

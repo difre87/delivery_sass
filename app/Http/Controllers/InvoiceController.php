@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AutoAssignsBranch;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Client;
 use App\Models\Shipment;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -14,11 +16,15 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
+    use AutoAssignsBranch, LogsActivity;
+
     public function index(Request $request): Response
     {
         $company = $request->user()->currentCompany;
+        $currentBranchId = $request->user()->current_branch_id;
 
         $invoices = Invoice::where('company_id', $company->id)
+            ->where('branch_id', $currentBranchId)
             ->with(['client', 'items'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -35,10 +41,10 @@ class InvoiceController extends Controller
             ->paginate(15);
 
         $stats = [
-            'total' => Invoice::where('company_id', $company->id)->sum('total'),
-            'paid' => Invoice::where('company_id', $company->id)->where('status', 'paid')->sum('total'),
-            'pending' => Invoice::where('company_id', $company->id)->whereIn('status', ['draft', 'sent'])->sum('total'),
-            'overdue' => Invoice::where('company_id', $company->id)->where('status', 'overdue')->sum('total'),
+            'total' => Invoice::where('company_id', $company->id)->where('branch_id', $currentBranchId)->sum('total'),
+            'paid' => Invoice::where('company_id', $company->id)->where('branch_id', $currentBranchId)->where('status', 'paid')->sum('total'),
+            'pending' => Invoice::where('company_id', $company->id)->where('branch_id', $currentBranchId)->whereIn('status', ['draft', 'sent'])->sum('total'),
+            'overdue' => Invoice::where('company_id', $company->id)->where('branch_id', $currentBranchId)->where('status', 'overdue')->sum('total'),
         ];
 
         return Inertia::render('Invoices/Index', [
@@ -88,14 +94,15 @@ class InvoiceController extends Controller
         ]);
 
         $invoice = Invoice::create([
-            'company_id' => $company->id,
-            'client_id' => $validated['client_id'],
-            'invoice_number' => Invoice::generateInvoiceNumber($company),
-            'invoice_date' => $validated['invoice_date'],
-            'due_date' => $validated['due_date'],
-            'tax_rate' => $validated['tax_rate'],
-            'notes' => $validated['notes'] ?? null,
-            'status' => 'draft',
+            ...$this->withCompanyAndBranch([
+                'client_id' => $validated['client_id'],
+                'invoice_number' => Invoice::generateInvoiceNumber($company),
+                'invoice_date' => $validated['invoice_date'],
+                'due_date' => $validated['due_date'],
+                'tax_rate' => $validated['tax_rate'],
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'draft',
+            ], $request),
         ]);
 
         foreach ($validated['items'] as $item) {
@@ -107,6 +114,8 @@ class InvoiceController extends Controller
                 'unit_price' => $item['unit_price'],
             ]);
         }
+
+        static::logCreated('invoices', $invoice, "Création de la facture {$invoice->invoice_number} pour le client {$invoice->client->name}");
 
         return redirect()->route('invoices.index')
             ->with('success', 'Facture créée avec succès.');
@@ -139,11 +148,17 @@ class InvoiceController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        $oldValues = $invoice->only(['status', 'notes', 'paid_at']);
+
         $invoice->update($validated);
 
         if ($validated['status'] === 'paid' && !$invoice->paid_at) {
             $invoice->markAsPaid();
         }
+
+        $newValues = $invoice->only(['status', 'notes', 'paid_at']);
+
+        static::logUpdated('invoices', $invoice, $oldValues, $newValues, "Modification de la facture {$invoice->invoice_number}");
 
         return back()->with('success', 'Facture mise à jour avec succès.');
     }
@@ -156,7 +171,10 @@ class InvoiceController extends Controller
             ->where('id', $invoiceId)
             ->firstOrFail();
         
+        $invoiceNumber = $invoice->invoice_number;
         $invoice->delete();
+
+        static::logDeleted('invoices', $invoice, "Suppression de la facture {$invoiceNumber}");
 
         return redirect()->route('invoices.index', ['company' => $company->slug])
             ->with('success', 'Facture supprimée avec succès.');

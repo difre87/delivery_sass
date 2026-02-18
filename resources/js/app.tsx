@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { useEffect } from 'react';
 import type { PageProps } from './types';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Fleetigo';
 
 // Extend Window interface
 declare global {

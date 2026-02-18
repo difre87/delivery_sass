@@ -21,6 +21,11 @@ class EnsureUserHasCompany
             return $next($request);
         }
 
+        // Les super admins n'ont pas besoin de société
+        if ($user->is_super_admin) {
+            return $next($request);
+        }
+
         if ($user->current_company_id && $user->companies()->whereKey($user->current_company_id)->exists()) {
             return $next($request);
         }

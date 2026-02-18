@@ -17,6 +17,7 @@ class Client extends Model
      */
     protected $fillable = [
         'company_id',
+        'branch_id',
         'name',
         'code',
         'email',
@@ -42,6 +43,14 @@ class Client extends Model
     public function billingAddress(): BelongsTo
     {
         return $this->belongsTo(Address::class, 'billing_address_id');
+    }
+
+    /**
+     * @return BelongsTo<Branch, $this>
+     */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     /**

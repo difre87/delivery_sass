@@ -37,12 +37,14 @@ class CompanyUserController extends Controller
         // Récupérer les branches pour les sélecteurs
         $branches = Branch::query()
             ->where('company_id', $company->id)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
 
         return Inertia::render('Settings/Users', [
             'users' => $users,
             'branches' => $branches,
+            'availableModules' => \App\Models\User::AVAILABLE_MODULES,
         ]);
     }
 
@@ -57,6 +59,8 @@ class CompanyUserController extends Controller
             'role' => ['required', 'string', Rule::in(['owner', 'manager', 'staff'])],
             'branch_ids' => ['nullable', 'array'],
             'branch_ids.*' => ['integer', Rule::exists('branches', 'id')->where('company_id', $companyModel->id)],
+            'allowed_modules' => ['nullable', 'array'],
+            'allowed_modules.*' => ['string', Rule::in(array_keys(\App\Models\User::AVAILABLE_MODULES))],
         ]);
 
         // Créer l'utilisateur
@@ -64,6 +68,7 @@ class CompanyUserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'allowed_modules' => $validated['allowed_modules'] ?? null,
         ]);
 
         // Attacher à la compagnie
@@ -105,12 +110,15 @@ class CompanyUserController extends Controller
             'role' => ['required', 'string', Rule::in(['owner', 'manager', 'staff'])],
             'branch_ids' => ['nullable', 'array'],
             'branch_ids.*' => ['integer', Rule::exists('branches', 'id')->where('company_id', $companyModel->id)],
+            'allowed_modules' => ['nullable', 'array'],
+            'allowed_modules.*' => ['string', Rule::in(array_keys(\App\Models\User::AVAILABLE_MODULES))],
         ]);
 
         // Mettre à jour l'utilisateur
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'allowed_modules' => $validated['allowed_modules'] ?? null,
         ]);
 
         // Mettre à jour le mot de passe si fourni

@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import FormInput from '@/Components/FormInput';
+import FormSelect from '@/Components/FormSelect';
 import FormTextarea from '@/Components/FormTextarea';
 import FormCheckbox from '@/Components/FormCheckbox';
 import Button from '@/Components/Button';
@@ -12,7 +13,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const initialForm = {
+const initialCreateForm = {
     name: '',
     code: '',
     email: '',
@@ -21,7 +22,17 @@ const initialForm = {
     is_active: true,
 };
 
-export default function ClientsIndex({ clients }) {
+const initialEditForm = {
+    name: '',
+    code: '',
+    email: '',
+    phone: '',
+    branch_id: '',
+    notes: '',
+    is_active: true,
+};
+
+export default function ClientsIndex({ clients, branches = [] }) {
     const page = usePage<any>();
     const { currentCompany } = page.props.auth;
     const flash = page.props.flash;
@@ -29,8 +40,8 @@ export default function ClientsIndex({ clients }) {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [deletingClient, setDeletingClient] = useState<any>(null);
 
-    const createForm = useForm(initialForm);
-    const editForm = useForm(initialForm);
+    const createForm = useForm(initialCreateForm);
+    const editForm = useForm(initialEditForm);
 
     const rows = clients?.data ?? [];
     const pagination = useMemo(() => clients?.links ?? [], [clients]);
@@ -53,6 +64,7 @@ export default function ClientsIndex({ clients }) {
             code: client.code ?? '',
             email: client.email ?? '',
             phone: client.phone ?? '',
+            branch_id: client.branch_id ?? '',
             notes: client.notes ?? '',
             is_active: client.is_active,
         });
@@ -105,6 +117,19 @@ export default function ClientsIndex({ clients }) {
                 <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
                     {row.code || '—'}
                 </span>
+            ),
+        },
+        {
+            key: 'branch',
+            label: 'Agence',
+            render: (row) => (
+                row.branch ? (
+                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                        {row.branch.name}
+                    </span>
+                ) : (
+                    <span className="text-slate-400">—</span>
+                )
             ),
         },
         {
@@ -351,6 +376,17 @@ export default function ClientsIndex({ clients }) {
                                         error={editForm.errors.phone}
                                         icon={null}
                                         helperText={null}
+                                    />
+
+                                    <FormSelect
+                                        label="Agence"
+                                        value={editForm.data.branch_id}
+                                        onChange={(e) => editForm.setData('branch_id', e.target.value)}
+                                        error={editForm.errors.branch_id}
+                                        options={[
+                                            { value: '', label: 'Sélectionner une agence...' },
+                                            ...branches.map(branch => ({ value: branch.id, label: branch.name }))
+                                        ]}
                                     />
                                 </div>
 

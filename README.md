@@ -1,33 +1,165 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Fleetigo - Solution de Gestion de Flotte et de Livraison
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 🚚 À propos de Fleetigo
 
-## About Laravel
+Fleetigo est une plateforme SaaS complète de gestion de flotte et de livraison conçue pour les entreprises de transport et de logistique. Elle offre une solution tout-en-un pour gérer vos opérations de livraison, votre flotte de véhicules, vos chauffeurs et bien plus encore.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### ✨ Fonctionnalités principales
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Multi-agences** : Gestion de plusieurs agences avec isolation des données
+- **Gestion des expéditions** : Suivi complet des livraisons et colis
+- **Gestion de flotte** : Suivi des véhicules, carburant, maintenance
+- **Gestion des chauffeurs** : Permis, assignations, suivi d'activité
+- **Clients** : Base de données clients avec historique
+- **Factures** : Génération et suivi de facturation
+- **Lettres de voiture** : Gestion documentaire complète
+- **Suivi GPS** : Tracking en temps réel des véhicules
+- **Rapports et Analytics** : Tableaux de bord et statistiques détaillées
+- **Multi-devises** : Support de 7 devises (EUR, USD, GBP, MAD, CHF, CAD, XOF)
+- **Système de modules** : Contrôle d'accès granulaire par utilisateur
+- **Plans et abonnements** : Système de tarification flexible
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 🏗️ Technologies utilisées
 
-## Learning Laravel
+- **Backend** : Laravel 11 (PHP 8.2+)
+- **Frontend** : React 18 + TypeScript + Inertia.js
+- **Styling** : Tailwind CSS + Framer Motion
+- **Base de données** : MySQL / SQLite
+- **PDF** : DomPDF pour génération de documents
+- **Maps** : Google Maps API pour géolocalisation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🚀 Installation
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Prérequis
 
-## Laravel Sponsors
+- PHP 8.2 ou supérieur
+- Composer
+- Node.js 18+ et npm
+- MySQL ou SQLite
+
+### Étapes d'installation
+
+```bash
+# Cloner le repository
+git clone https://github.com/votre-repo/fleetigo.git
+cd fleetigo
+
+# Installer les dépendances PHP
+composer install
+
+# Installer les dépendances JavaScript
+npm install
+
+# Copier le fichier d'environnement
+cp .env.example .env
+
+# Générer la clé d'application
+php artisan key:generate
+
+# Configurer la base de données dans .env
+# Puis exécuter les migrations
+php artisan migrate --seed
+
+# Compiler les assets
+npm run dev
+
+# Lancer le serveur de développement
+php artisan serve
+```
+
+## 📚 Documentation
+
+La documentation complète est disponible dans les fichiers suivants :
+
+- `MODULE_ACCESS.md` - Système de contrôle d'accès aux modules
+- `BRANCH_AUTO_ASSIGNMENT.md` - Assignation automatique des agences
+- `CLIENTS_BY_BRANCH.md` - Gestion des clients par agence
+- `SUPER_ADMIN.md` - Système d'administration
+
+## 🔐 Compte Super Admin
+
+Un compte super admin est créé par défaut :
+- **Email** : admin@fleetigo.com
+- **Mot de passe** : admin123456
+
+⚠️ **Important** : Changez ce mot de passe en production !
+
+## 📝 Structure du projet
+
+```
+fleetigo/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Concerns/
+│   │   │   │   ├── AutoAssignsBranch.php
+│   │   │   │   └── RequiresCompany.php
+│   │   │   ├── ClientController.php
+│   │   │   ├── ShipmentController.php
+│   │   │   ├── PackageController.php
+│   │   │   ├── DriverController.php
+│   │   │   ├── VehicleController.php
+│   │   │   └── ...
+│   │   └── Middleware/
+│   │       ├── CheckModuleAccess.php
+│   │       ├── EnsureSuperAdmin.php
+│   │       └── ...
+│   └── Models/
+│       ├── Client.php
+│       ├── Shipment.php
+│       ├── Package.php
+│       ├── Driver.php
+│       ├── Vehicle.php
+│       └── ...
+├── resources/
+│   ├── js/
+│   │   ├── Pages/
+│   │   │   ├── Clients/
+│   │   │   ├── Shipments/
+│   │   │   ├── Packages/
+│   │   │   ├── Drivers/
+│   │   │   └── ...
+│   │   ├── Components/
+│   │   └── Layouts/
+│   └── views/
+├── database/
+│   └── migrations/
+└── routes/
+    └── web.php
+```
+
+## 🧪 Tests
+
+```bash
+# Exécuter les tests
+php artisan test
+
+# Tests avec couverture
+php artisan test --coverage
+```
+
+## 🌍 Multi-devises
+
+Fleetigo supporte 7 devises avec conversion automatique :
+- EUR (Euro) - Devise de base
+- USD (Dollar américain)
+- GBP (Livre sterling)
+- MAD (Dirham marocain)
+- CHF (Franc suisse)
+- CAD (Dollar canadien)
+- XOF (Franc CFA)
+
+## 👥 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+
+## 📄 Licence
+
+Ce projet est sous licence MIT.
+
+---
+
+**Fleetigo** - Simplifiez la gestion de votre flotte 🚚✨
 
 We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 

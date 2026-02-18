@@ -91,6 +91,9 @@ Route::middleware('auth')->group(function () {
         // Analytics (Manager+)
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index')->middleware('can:access-analytics');
         
+        // Activity Logs (Manager+)
+        Route::get('/activity-logs', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('can:access-analytics');
+        
         // Tracking GPS (Tous les utilisateurs peuvent voir le tracking)
         Route::get('/tracking', [TrackingController::class, 'index'])->name('tracking.index');
         Route::get('/tracking/live', [TrackingController::class, 'liveLocations'])->name('tracking.live');
@@ -197,6 +200,7 @@ Route::middleware('auth')->group(function () {
                 Route::post('/settings/branches', [\App\Http\Controllers\CompanyBranchController::class, 'store'])->name('settings.branches.store');
                 Route::patch('/settings/branches/{branchId}', [\App\Http\Controllers\CompanyBranchController::class, 'update'])->name('settings.branches.update');
                 Route::delete('/settings/branches/{branchId}', [\App\Http\Controllers\CompanyBranchController::class, 'destroy'])->name('settings.branches.destroy');
+                Route::post('/settings/branches/{branchId}/restore', [\App\Http\Controllers\CompanyBranchController::class, 'restore'])->name('settings.branches.restore');
             });
             
             Route::middleware(['can:manage-users'])->group(function () {
@@ -228,6 +232,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Super Admin Routes
+Route::prefix('admin')->middleware(['auth', 'super-admin'])->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/companies', [App\Http\Controllers\Admin\AdminDashboardController::class, 'companies'])->name('companies');
+    Route::get('/users', [App\Http\Controllers\Admin\AdminDashboardController::class, 'users'])->name('users');
+    Route::get('/plans', [App\Http\Controllers\Admin\AdminDashboardController::class, 'plans'])->name('plans');
 });
 
 require __DIR__.'/auth.php';

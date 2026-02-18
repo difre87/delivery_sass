@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AutoAssignsBranch;
 use App\Http\Requests\DriverStoreRequest;
 use App\Http\Requests\DriverUpdateRequest;
 use App\Http\Requests\DriverVehicleAssignRequest;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleAssignment;
+use App\Traits\LogsActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +19,7 @@ use Inertia\Response;
 
 class DriverController extends Controller
 {
+    use LogsActivity, AutoAssignsBranch;
     public function index(Request $request): Response
     {
         $company = $request->user()->currentCompany;
@@ -52,23 +55,21 @@ class DriverController extends Controller
     public function store(DriverStoreRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $companyId = $request->user()->current_company_id;
-        $branchId = $request->user()->current_branch_id;
 
-        // Créer l'entrée dans la table drivers
-        $driver = \App\Models\Driver::create([
-            'company_id' => $companyId,
-            'branch_id' => $branchId,
-            'user_id' => null, // Pas d'utilisateur associé
-            'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'identity_document_type' => $validated['identity_document_type'] ?? null,
-            'identity_document_number' => $validated['identity_document_number'] ?? null,
-            'license_type' => $validated['license_type'] ?? null,
-            'license_number' => $validated['license_number'] ?? null,
-            'license_expires_at' => $validated['license_expires_at'] ?? null,
-            'is_active' => (bool) ($validated['is_active'] ?? true),
-        ]);
+        // Créer l'entrée dans la table drivers avec assignation automatique
+        $driver = \App\Models\Driver::create(
+            $this->withCompanyAndBranch([
+                'user_id' => null, // Pas d'utilisateur associé
+                'name' => $validated['name'],
+                'phone' => $validated['phone'],
+                'identity_document_type' => $validated['identity_document_type'] ?? null,
+                'identity_document_number' => $validated['identity_document_number'] ?? null,
+                'license_type' => $validated['license_type'] ?? null,
+                'license_number' => $validated['license_number'] ?? null,
+                'license_expires_at' => $validated['license_expires_at'] ?? null,
+                'is_active' => (bool) ($validated['is_active'] ?? true),
+            ], $request)
+        );
         
         // Assigner le véhicule directement via la table vehicle_assignments
         if (isset($validated['vehicle_id'])) {
@@ -79,6 +80,9 @@ class DriverController extends Controller
                 'ends_at' => null,
             ]);
         }
+
+        // Log l'activité
+        static::logCreated('drivers', $driver, "Création du chauffeur {$driver->name}");
 
         return redirect()->route('drivers.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Livreur créé avec succès.');
     }
@@ -114,6 +118,11 @@ class DriverController extends Controller
             ]);
         }
 
+        // Log l'activité
+        $oldValues = $driver->getOriginal();
+        $newValues = $driver->getAttributes();
+        static::logUpdated('drivers', $driver, $oldValues, $newValues, "Modification du chauffeur {$driver->name}");
+
         return redirect()->route('drivers.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Livreur mis à jour.');
     }
 
@@ -121,11 +130,16 @@ class DriverController extends Controller
     {
         $this->ensureDriverBelongsToCurrentCompany($request, $driver);
 
+        $driverName = $driver->name;
+
         // Terminer toutes les assignations de véhicules
         $driver->vehicleAssignments()->whereNull('ends_at')->update(['ends_at' => now()]);
         
         // Désactiver le livreur
         $driver->update(['is_active' => false]);
+        
+        // Log l'activité
+        static::logDeleted('drivers', $driver, "Suppression (désactivation) du chauffeur {$driverName}");
         
         // Ou supprimer complètement (décommenter si on veut vraiment supprimer)
         // $driver->delete();

@@ -2,16 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RequiresCompany;
 use App\Models\FuelLog;
 use App\Models\Shipment;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): Response
+    use RequiresCompany;
+
+    public function __invoke(Request $request): Response|SymfonyResponse
     {
+        // Vérifier que l'utilisateur a une société
+        if ($redirect = $this->ensureHasCompany($request)) {
+            return $redirect;
+        }
+
         $company = $request->user()->currentCompany;
 
         $currentMonth = now()->startOfMonth();

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AutoAssignsBranch;
 use App\Http\Requests\VehicleStoreRequest;
 use App\Http\Requests\VehicleUpdateRequest;
 use App\Models\Branch;
 use App\Models\Vehicle;
+use App\Traits\LogsActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,12 +15,16 @@ use Inertia\Response;
 
 class VehicleController extends Controller
 {
+    use LogsActivity, AutoAssignsBranch;
+
     public function index(Request $request): Response
     {
         $company = $request->user()->currentCompany;
+        $currentBranchId = $request->user()->current_branch_id;
 
         $vehicles = Vehicle::query()
             ->forCompany($company->id)
+            ->when($currentBranchId, fn($q) => $q->where('branch_id', $currentBranchId))
             ->with('branch:id,name')
             ->orderByDesc('id')
             ->paginate(10)
@@ -26,6 +32,7 @@ class VehicleController extends Controller
 
         $branches = Branch::query()
             ->forCompany($company->id)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -42,12 +49,13 @@ class VehicleController extends Controller
 
         $odometer = (int) ($validated['current_odometer'] ?? $validated['odometer_km'] ?? 0);
 
-        Vehicle::create([
-            ...$validated,
+        $vehicle = Vehicle::create([
+            ...$this->withCompanyAndBranch($validated, $request),
             'odometer_km' => $odometer,
             'current_odometer' => $odometer,
-            'company_id' => $company->id,
         ]);
+
+        static::logCreated('vehicles', $vehicle, "Création du véhicule {$vehicle->plate_number}");
 
         return redirect()->route('fleet.index', ['company' => $company->slug])->with('status', 'Véhicule créé avec succès.');
     }
@@ -59,11 +67,17 @@ class VehicleController extends Controller
         $validated = $request->validated();
         $odometer = (int) ($validated['current_odometer'] ?? $validated['odometer_km'] ?? 0);
 
+        $oldValues = $vehicle->only(['plate_number', 'make', 'model', 'year', 'vin', 'odometer_km', 'current_odometer', 'branch_id', 'status']);
+
         $vehicle->update([
             ...$validated,
             'odometer_km' => $odometer,
             'current_odometer' => $odometer,
         ]);
+
+        $newValues = $vehicle->only(['plate_number', 'make', 'model', 'year', 'vin', 'odometer_km', 'current_odometer', 'branch_id', 'status']);
+
+        static::logUpdated('vehicles', $vehicle, $oldValues, $newValues, "Modification du véhicule {$vehicle->plate_number}");
 
         return redirect()->route('fleet.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Véhicule mis à jour.');
     }
@@ -72,7 +86,10 @@ class VehicleController extends Controller
     {
         $this->ensureVehicleBelongsToCurrentCompany($request, $vehicle);
 
+        $plateNumber = $vehicle->plate_number;
         $vehicle->delete();
+
+        static::logDeleted('vehicles', $vehicle, "Suppression du véhicule {$plateNumber}");
 
         return redirect()->route('fleet.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Véhicule supprimé.');
     }

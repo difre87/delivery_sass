@@ -25,9 +25,10 @@ const initialForm = {
     password_confirmation: '',
     role: 'staff',
     branch_ids: [],
+    allowed_modules: [],
 };
 
-export default function UsersIndex({ users, branches = [] }) {
+export default function UsersIndex({ users, branches = [], availableModules = {} }) {
     const { flash, auth } = usePage().props as any;
     const currentCompany = auth.user.current_company;
     const [editingUserId, setEditingUserId] = useState(null);
@@ -66,6 +67,7 @@ export default function UsersIndex({ users, branches = [] }) {
             password_confirmation: '',
             role: user.pivot?.role ?? 'staff',
             branch_ids: (user.branches ?? []).map(b => b.id),
+            allowed_modules: user.allowed_modules ?? [],
         });
     };
 
@@ -101,6 +103,16 @@ export default function UsersIndex({ users, branches = [] }) {
             : [...currentIds, branchId];
         form.setData('branch_ids', nextIds);
     };
+
+    const toggleModule = (form, moduleKey) => {
+        const currentModules = form.data.allowed_modules ?? [];
+        const nextModules = currentModules.includes(moduleKey)
+            ? currentModules.filter(m => m !== moduleKey)
+            : [...currentModules, moduleKey];
+        form.setData('allowed_modules', nextModules);
+    };
+
+    const isOwner = (form) => form.data.role === 'owner';
 
     const getRoleLabel = (role) => {
         const option = roleOptions.find(r => r.value === role);
@@ -307,6 +319,39 @@ export default function UsersIndex({ users, branches = [] }) {
                                     )}
                                 </div>
 
+                                {/* Modules Access */}
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Modules accessibles 
+                                        {isOwner(createForm) && <span className="text-emerald-600 ml-2">(Propriétaire : accès complet automatique)</span>}
+                                        {!isOwner(createForm) && <span className="text-gray-400 ml-2">(laisser vide pour accès complet)</span>}
+                                    </label>
+                                    <div className="space-y-2 rounded-lg border border-gray-200 p-3 max-h-60 overflow-y-auto">
+                                        {Object.entries(availableModules).map(([key, label]) => (
+                                            <label 
+                                                key={key} 
+                                                className={`flex items-center gap-2 p-2 rounded ${
+                                                    isOwner(createForm) 
+                                                        ? 'opacity-50 cursor-not-allowed bg-gray-50' 
+                                                        : 'cursor-pointer hover:bg-blue-50'
+                                                }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isOwner(createForm) || createForm.data.allowed_modules.includes(key)}
+                                                    onChange={() => !isOwner(createForm) && toggleModule(createForm, key)}
+                                                    disabled={isOwner(createForm)}
+                                                    className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 disabled:opacity-50"
+                                                />
+                                                <span className="text-sm text-gray-700">{String(label)}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {createForm.errors.allowed_modules && (
+                                        <p className="mt-1 text-sm text-red-600">{createForm.errors.allowed_modules}</p>
+                                    )}
+                                </div>
+
                                 <div className="mt-6 flex gap-3">
                                     <Button type="submit" disabled={createForm.processing}>
                                         {createForm.processing ? 'Création...' : 'Créer l\'utilisateur'}
@@ -402,6 +447,39 @@ export default function UsersIndex({ users, branches = [] }) {
                                             <p className="text-sm text-gray-500">Aucune agence disponible</p>
                                         )}
                                     </div>
+                                </div>
+
+                                {/* Modules Access */}
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Modules accessibles 
+                                        {isOwner(editForm) && <span className="text-emerald-600 ml-2">(Propriétaire : accès complet automatique)</span>}
+                                        {!isOwner(editForm) && <span className="text-gray-400 ml-2">(laisser vide pour accès complet)</span>}
+                                    </label>
+                                    <div className="space-y-2 rounded-lg border border-gray-200 p-3 max-h-60 overflow-y-auto">
+                                        {Object.entries(availableModules).map(([key, label]) => (
+                                            <label 
+                                                key={key} 
+                                                className={`flex items-center gap-2 p-2 rounded ${
+                                                    isOwner(editForm) 
+                                                        ? 'opacity-50 cursor-not-allowed bg-gray-50' 
+                                                        : 'cursor-pointer hover:bg-blue-50'
+                                                }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isOwner(editForm) || editForm.data.allowed_modules.includes(key)}
+                                                    onChange={() => !isOwner(editForm) && toggleModule(editForm, key)}
+                                                    disabled={isOwner(editForm)}
+                                                    className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 disabled:opacity-50"
+                                                />
+                                                <span className="text-sm text-gray-700">{String(label)}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {editForm.errors.allowed_modules && (
+                                        <p className="mt-1 text-sm text-red-600">{editForm.errors.allowed_modules}</p>
+                                    )}
                                 </div>
 
                                 <div className="mt-6 flex gap-3">

@@ -37,6 +37,7 @@ class ClientUpdateRequest extends FormRequest
             ],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'branch_id' => ['nullable', 'integer', Rule::exists('branches', 'id')->where('company_id', $this->user()->current_company_id)],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['sometimes', 'boolean'],
         ];

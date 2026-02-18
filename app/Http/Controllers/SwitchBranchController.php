@@ -29,6 +29,7 @@ class SwitchBranchController extends Controller
         // Changer l'agence active
         $user->update(['current_branch_id' => $branch->id]);
         
-        return redirect()->back()->with('status', "Agence changée vers {$branch->name}");
+        // Rediriger vers la page actuelle en forçant le rechargement des données
+        return redirect()->back()->with('status', "Agence changée vers {$branch->name}")->with('refresh', true);
     }
 }

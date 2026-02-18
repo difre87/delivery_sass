@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AutoAssignsBranch;
 use App\Http\Requests\DispatchRunStoreRequest;
 use App\Http\Requests\DispatchRunUpdateRequest;
 use App\Models\Branch;
@@ -9,6 +10,7 @@ use App\Models\DispatchRun;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Traits\LogsActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,6 +18,8 @@ use Inertia\Response;
 
 class DispatchRunController extends Controller
 {
+    use AutoAssignsBranch, LogsActivity;
+
     public function index(Request $request): Response
     {
         $company = $request->user()->currentCompany;
@@ -31,6 +35,7 @@ class DispatchRunController extends Controller
 
         $branches = Branch::query()
             ->forCompany($company->id)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -69,12 +74,16 @@ class DispatchRunController extends Controller
     {
         $validated = $request->validated();
 
-        $dispatchRun = DispatchRun::create([
-            ...collect($validated)->except('shipment_ids')->toArray(),
-            'company_id' => $request->user()->current_company_id,
-        ]);
+        $dispatchRun = DispatchRun::create(
+            $this->withCompanyAndBranch(
+                collect($validated)->except('shipment_ids')->toArray(),
+                $request
+            )
+        );
 
         $dispatchRun->shipments()->sync($validated['shipment_ids'] ?? []);
+
+        static::logCreated('dispatch_runs', $dispatchRun, "Création de la tournée du {$dispatchRun->date} avec {$dispatchRun->shipments()->count()} livraisons");
 
         return redirect()->route('routes.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Tournée créée avec succès.');
     }
@@ -85,8 +94,19 @@ class DispatchRunController extends Controller
 
         $validated = $request->validated();
 
+        $oldValues = $dispatchRun->only(['date', 'status', 'branch_id', 'driver_id', 'vehicle_id', 'start_time', 'end_time']);
+        $oldShipmentIds = $dispatchRun->shipments()->pluck('id')->toArray();
+
         $dispatchRun->update(collect($validated)->except('shipment_ids')->toArray());
         $dispatchRun->shipments()->sync($validated['shipment_ids'] ?? []);
+
+        $newValues = $dispatchRun->only(['date', 'status', 'branch_id', 'driver_id', 'vehicle_id', 'start_time', 'end_time']);
+        $newShipmentIds = $dispatchRun->shipments()->pluck('id')->toArray();
+
+        $changes = array_merge($oldValues, ['shipment_ids' => $oldShipmentIds]);
+        $newChanges = array_merge($newValues, ['shipment_ids' => $newShipmentIds]);
+
+        static::logUpdated('dispatch_runs', $dispatchRun, $changes, $newChanges, "Modification de la tournée du {$dispatchRun->date}");
 
         return redirect()->route('routes.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Tournée mise à jour.');
     }
@@ -95,7 +115,10 @@ class DispatchRunController extends Controller
     {
         $this->ensureDispatchRunBelongsToCurrentCompany($request, $dispatchRun);
 
+        $date = $dispatchRun->date;
         $dispatchRun->delete();
+
+        static::logDeleted('dispatch_runs', $dispatchRun, "Suppression de la tournée du {$date}");
 
         return redirect()->route('routes.index', ['company' => $request->user()->currentCompany->slug])->with('status', 'Tournée supprimée.');
     }

@@ -21,6 +21,26 @@ export default function AuthenticatedLayout({ header, children }) {
     const permissions = page.props.permissions || {};
     const companySlug = currentCompany?.slug;
     
+    // Si super admin sans société, afficher uniquement le menu admin
+    if (permissions.isSuperAdmin && !companySlug) {
+        return (
+            <div className="admin-theme min-h-screen bg-slate-50">
+                <div className="flex h-screen items-center justify-center">
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold text-slate-900 mb-4">🔐 Super Admin</h1>
+                        <p className="text-slate-600 mb-6">Accédez au dashboard d'administration</p>
+                        <a
+                            href={route('admin.dashboard')}
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                        >
+                            Dashboard Admin →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
     const navigation: NavigationItem[] = [
         {
             name: 'Dashboard',
@@ -106,6 +126,18 @@ export default function AuthenticatedLayout({ header, children }) {
         });
     }
 
+    // Ajouter le menu Super Admin si l'utilisateur est super admin
+    if (permissions.isSuperAdmin) {
+        navigation.push({
+            name: 'Super Admin',
+            href: route('admin.dashboard'),
+            active: route().current('admin.*'),
+            icon: Icons.Settings,
+            badge: 'Admin',
+            highlight: false,
+        });
+    }
+
     // Ajouter le menu Upgrade
     navigation.push({
         name: 'Upgrade Plan',
@@ -130,7 +162,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">
-                                Delivery SaaS
+                                Fleetigo
                             </p>
                             <p className="text-sm font-semibold text-slate-700">
                                 Operations Cockpit
@@ -236,7 +268,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">
-                                            Delivery SaaS
+                                            Fleetigo
                                         </p>
                                         <p className="text-sm font-semibold text-slate-700">Navigation</p>
                                     </div>

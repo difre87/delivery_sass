@@ -6,8 +6,8 @@ import { Icons } from '@/Components/Icons';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import Toast from '@/Components/Toast';
 
-export default function Branches({ branches, canAddMore, limitReached }) {
-    const { auth, flash, errors } = usePage<any>().props;
+export default function Branches() {
+    const { auth, flash, errors, branches, canAddMore, limitReached } = usePage<any>().props;
     const currentCompany = auth.currentCompany;
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -72,9 +72,19 @@ export default function Branches({ branches, canAddMore, limitReached }) {
 
     const confirmDelete = () => {
         if (deletingBranch) {
-            router.delete(route('settings.branches.destroy', { company: currentCompany.slug, branchId: deletingBranch.id }));
-            setDeletingBranch(null);
+            router.delete(route('settings.branches.destroy', { company: currentCompany.slug, branchId: deletingBranch.id }), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setDeletingBranch(null);
+                }
+            });
         }
+    };
+
+    const handleRestore = (branch) => {
+        router.post(route('settings.branches.restore', { company: currentCompany.slug, branchId: branch.id }), {}, {
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -183,15 +193,28 @@ export default function Branches({ branches, canAddMore, limitReached }) {
                                         layout
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                                        className={`rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow ${
+                                            !branch.is_active ? 'border-slate-300 bg-slate-50 opacity-75' : 'border-slate-200'
+                                        }`}
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="rounded-lg bg-emerald-100 p-2">
-                                                    <Icons.Building className="h-5 w-5 text-emerald-600" />
+                                                <div className={`rounded-lg p-2 ${
+                                                    branch.is_active ? 'bg-emerald-100' : 'bg-slate-200'
+                                                }`}>
+                                                    <Icons.Building className={`h-5 w-5 ${
+                                                        branch.is_active ? 'text-emerald-600' : 'text-slate-500'
+                                                    }`} />
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-semibold text-slate-900">{branch.name}</h4>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-semibold text-slate-900">{branch.name}</h4>
+                                                        {!branch.is_active && (
+                                                            <span className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
+                                                                Inactive
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-xs text-slate-500">ID: {branch.id}</p>
                                                 </div>
                                             </div>
@@ -222,18 +245,33 @@ export default function Branches({ branches, canAddMore, limitReached }) {
                                                 <span>{branch.users_count} utilisateurs</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => openEditModal(branch)}
-                                                    className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-                                                >
-                                                    <Icons.Edit className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(branch)}
-                                                    className="rounded-md p-1 text-slate-400 hover:bg-rose-100 hover:text-rose-600 transition"
-                                                >
-                                                    <Icons.Trash className="h-4 w-4" />
-                                                </button>
+                                                {branch.is_active ? (
+                                                    <>
+                                                        <button
+                                                            onClick={() => openEditModal(branch)}
+                                                            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                                                            title="Modifier"
+                                                        >
+                                                            <Icons.Edit className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(branch)}
+                                                            className="rounded-md p-1 text-slate-400 hover:bg-rose-100 hover:text-rose-600 transition"
+                                                            title="Désactiver"
+                                                        >
+                                                            <Icons.Trash className="h-4 w-4" />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleRestore(branch)}
+                                                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 transition"
+                                                        title="Réactiver"
+                                                    >
+                                                        <Icons.RefreshCw className="h-3 w-3" />
+                                                        Réactiver
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </motion.div>
@@ -449,9 +487,9 @@ export default function Branches({ branches, canAddMore, limitReached }) {
             {/* Confirm Delete Dialog */}
             <ConfirmDialog
                 isOpen={!!deletingBranch}
-                title="Supprimer l'agence"
-                message={deletingBranch ? `Êtes-vous sûr de vouloir supprimer l'agence "${deletingBranch.name}" ? Cette action est irréversible.` : ''}
-                confirmText="Supprimer"
+                title="Désactiver l'agence"
+                message={deletingBranch ? `Êtes-vous sûr de vouloir désactiver l'agence "${deletingBranch.name}" ? Vous pourrez la réactiver plus tard si nécessaire.` : ''}
+                confirmText="Désactiver"
                 onConfirm={confirmDelete}
                 onCancel={() => setDeletingBranch(null)}
             />

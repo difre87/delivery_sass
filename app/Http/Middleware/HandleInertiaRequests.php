@@ -37,7 +37,7 @@ class HandleInertiaRequests extends Middleware
         $userBranches = $user && $user->current_company_id
             ? $user->branches()
                 ->where('branches.company_id', $user->current_company_id)
-                ->select('branches.id', 'branches.name')
+                ->select('branches.id', 'branches.name', 'branches.is_active')
                 ->get()
             : collect();
 
@@ -78,7 +78,12 @@ class HandleInertiaRequests extends Middleware
                 'canViewShipments' => Gate::allows('view-shipments'),
                 'canManageShipments' => Gate::allows('manage-shipments'),
                 'canAccessAnalytics' => Gate::allows('access-analytics'),
-            ] : [],
+                'isSuperAdmin' => $user?->is_super_admin ?? false,
+                'allowedModules' => $user->allowed_modules ?? array_keys(\App\Models\User::AVAILABLE_MODULES),
+            ] : [
+                'isSuperAdmin' => $user?->is_super_admin ?? false,
+                'allowedModules' => [],
+            ],
             'flash' => [
                 'status' => $request->session()->get('status'),
             ],

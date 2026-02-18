@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AutoAssignsBranch;
 use App\Models\Package;
 use App\Models\Shipment;
+use App\Traits\LogsActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,6 +13,8 @@ use Inertia\Response;
 
 class PackageController extends Controller
 {
+    use LogsActivity, AutoAssignsBranch;
+
     public function index(Request $request): Response
     {
         $company = $request->user()->currentCompany;
@@ -74,14 +78,14 @@ class PackageController extends Controller
         }
 
         $package = Package::create([
-            ...$validated,
-            'company_id' => $company->id,
-            'branch_id' => $request->user()->current_branch_id,
+            ...$this->withCompanyAndBranch($validated, $request),
             'status' => 'pending', // Status initial: en attente d'assignation à une livraison
             'requires_signature' => $validated['requires_signature'] ?? false,
             'is_fragile' => $validated['is_fragile'] ?? false,
             'is_hazardous' => $validated['is_hazardous'] ?? false,
         ]);
+
+        static::logCreated('packages', $package, "Création du colis {$package->tracking_number}");
 
         return redirect()->route('packages.index', ['company' => $company->slug])
             ->with('status', 'Colis créé avec succès.');
@@ -130,7 +134,13 @@ class PackageController extends Controller
         // Verify shipment belongs to company
         Shipment::forCompany($company->id)->findOrFail($validated['shipment_id']);
 
+        $oldValues = $package->only(['shipment_id', 'status', 'type', 'weight_kg', 'reference', 'description']);
+
         $package->update($validated);
+
+        $newValues = $package->only(['shipment_id', 'status', 'type', 'weight_kg', 'reference', 'description']);
+
+        static::logUpdated('packages', $package, $oldValues, $newValues, "Modification du colis {$package->tracking_number}");
 
         return redirect()->route('packages.index', ['company' => $company->slug])
             ->with('status', 'Colis mis à jour avec succès.');
@@ -141,7 +151,10 @@ class PackageController extends Controller
         $company = $request->user()->currentCompany;
         $package = Package::forCompany($company->id)->findOrFail($packageId);
 
+        $trackingNumber = $package->tracking_number;
         $package->delete();
+
+        static::logDeleted('packages', $package, "Suppression du colis {$trackingNumber}");
 
         return redirect()->route('packages.index', ['company' => $company->slug])
             ->with('status', 'Colis supprimé avec succès.');

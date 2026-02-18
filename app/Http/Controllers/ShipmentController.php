@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AutoAssignsBranch;
 use App\Http\Requests\ShipmentStoreRequest;
 use App\Http\Requests\ShipmentUpdateRequest;
 use App\Models\Branch;
 use App\Models\Client;
 use App\Models\Package;
 use App\Models\Shipment;
+use App\Traits\LogsActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +17,8 @@ use Inertia\Response;
 
 class ShipmentController extends Controller
 {
+    use LogsActivity, AutoAssignsBranch;
+
     public function index(Request $request): Response
     {
         $company = $request->user()->currentCompany;
@@ -22,6 +26,7 @@ class ShipmentController extends Controller
 
         $shipments = Shipment::query()
             ->forCompany($company->id)
+            ->when($currentBranchId, fn($q) => $q->where('branch_id', $currentBranchId))
             ->with(['client:id,name', 'branch:id,name', 'packages:id,shipment_id,tracking_number,reference,description,type'])
             ->orderByDesc('id')
             ->paginate(10)
@@ -35,6 +40,7 @@ class ShipmentController extends Controller
 
         $branches = Branch::query()
             ->forCompany($company->id)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -59,10 +65,9 @@ class ShipmentController extends Controller
     {
         $company = $request->user()->currentCompany;
 
-        $shipment = Shipment::create([
-            ...$request->validated(),
-            'company_id' => $company->id,
-        ]);
+        $shipment = Shipment::create(
+            $this->withCompanyAndBranch($request->validated(), $request)
+        );
 
         // Associate selected packages with the shipment
         if ($request->has('package_ids') && is_array($request->package_ids)) {
@@ -76,6 +81,8 @@ class ShipmentController extends Controller
                 ]);
         }
 
+        static::logCreated('shipments', $shipment, "Création de la livraison #{$shipment->id} pour le client {$shipment->client->name}");
+
         return redirect()->route('shipments.index', ['company' => $company->slug])->with('status', 'Livraison créée avec succès.');
     }
 
@@ -83,6 +90,8 @@ class ShipmentController extends Controller
     {
         $this->ensureShipmentBelongsToCurrentCompany($request, $shipment);
         $companyModel = $request->user()->currentCompany;
+
+        $oldValues = $shipment->only(['client_id', 'branch_id', 'status', 'delivery_date', 'delivery_address', 'delivery_city', 'delivery_postal_code', 'notes']);
 
         $shipment->update($request->validated());
 
@@ -113,6 +122,10 @@ class ShipmentController extends Controller
                 ]);
         }
 
+        $newValues = $shipment->only(['client_id', 'branch_id', 'status', 'delivery_date', 'delivery_address', 'delivery_city', 'delivery_postal_code', 'notes']);
+
+        static::logUpdated('shipments', $shipment, $oldValues, $newValues, "Modification de la livraison #{$shipment->id}");
+
         return redirect()->route('shipments.index', ['company' => $companyModel->slug])->with('status', 'Livraison mise à jour.');
     }
 
@@ -120,7 +133,10 @@ class ShipmentController extends Controller
     {
         $this->ensureShipmentBelongsToCurrentCompany($request, $shipment);
 
+        $shipmentId = $shipment->id;
         $shipment->delete();
+
+        static::logDeleted('shipments', $shipment, "Suppression de la livraison #{$shipmentId}");
 
         $companyModel = $request->user()->currentCompany;
         return redirect()->route('shipments.index', ['company' => $companyModel->slug])->with('status', 'Livraison supprimée.');

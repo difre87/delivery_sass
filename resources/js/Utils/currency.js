@@ -28,7 +28,13 @@ export const formatCurrency = (amount, currencyCode = 'EUR', options = {}) => {
     
     const symbol = getCurrencySymbol(currencyCode);
     const actualAmount = fromCents ? (amount ?? 0) / 100 : amount;
-    const formattedAmount = parseFloat(actualAmount).toFixed(decimals);
+    
+    // Format avec séparateurs de milliers
+    const formattedAmount = new Intl.NumberFormat('fr-FR', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    }).format(actualAmount);
+    
     const space = spaceBetween ? ' ' : '';
     
     // For XOF (FCFA), USD, CAD - symbol after the amount

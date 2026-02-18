@@ -7,24 +7,31 @@ export default function BranchSwitcher() {
     const { currentBranch, userBranches, currentCompany } = auth;
     const [isOpen, setIsOpen] = useState(false);
 
-    // Ne rien afficher si l'utilisateur n'a aucune agence
+    // Ne rien afficher si l'utilisateur n'a aucune agence du tout
     if (!userBranches || userBranches.length === 0) {
         return null;
     }
 
+    // Filtrer uniquement les branches actives
+    const activeBranches = userBranches.filter(branch => branch.is_active !== false);
+
     const switchBranch = (branchId) => {
+        setIsOpen(false);
+        
         router.post(route('branch.switch', { company: currentCompany.slug, branchId: branchId }), {}, {
             preserveScroll: false,
-            preserveState: false,
             onSuccess: () => {
-                setIsOpen(false);
-                // Forcer le rechargement complet de la page pour actualiser toutes les données
-                router.reload();
+                // Visiter la page actuelle pour forcer le rechargement complet des données
+                router.visit(window.location.href, {
+                    preserveState: false,
+                    preserveScroll: false,
+                    replace: true,
+                });
             },
         });
     };
 
-    const hasMultipleBranches = userBranches.length > 1;
+    const hasMultipleBranches = activeBranches.length > 1;
 
     return (
         <div className="relative">
@@ -49,7 +56,7 @@ export default function BranchSwitcher() {
                                 <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase">
                                     Changer d'agence
                                 </div>
-                                {userBranches.map((branch) => (
+                                {activeBranches.map((branch) => (
                                     <button
                                         key={branch.id}
                                         onClick={() => switchBranch(branch.id)}

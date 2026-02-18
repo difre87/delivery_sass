@@ -16,7 +16,7 @@ export default function LegalNotice() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
-                            <span className="text-lg font-bold text-white">Delivery SaaS</span>
+                            <span className="text-lg font-bold text-white">Fleetigo</span>
                         </Link>
 
                         <Link
@@ -46,14 +46,14 @@ export default function LegalNotice() {
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-4">1. Éditeur du Site</h2>
                                 <div className="leading-relaxed space-y-2">
-                                    <p><strong className="text-white">Raison sociale :</strong> Delivery SaaS SAS</p>
+                                    <p><strong className="text-white">Raison sociale :</strong> Fleetigo SAS</p>
                                     <p><strong className="text-white">Forme juridique :</strong> Société par Actions Simplifiée</p>
                                     <p><strong className="text-white">Capital social :</strong> 10 000 €</p>
                                     <p><strong className="text-white">Siège social :</strong> 123 Avenue de la République, 75011 Paris, France</p>
                                     <p><strong className="text-white">RCS :</strong> Paris B 123 456 789</p>
                                     <p><strong className="text-white">SIRET :</strong> 123 456 789 00012</p>
                                     <p><strong className="text-white">N° TVA intracommunautaire :</strong> FR 12 123456789</p>
-                                    <p><strong className="text-white">Email :</strong> <a href="mailto:contact@delivery-saas.com" className="text-emerald-400 hover:text-emerald-300">contact@delivery-saas.com</a></p>
+                                    <p><strong className="text-white">Email :</strong> <a href="mailto:contact@fleetigo.com" className="text-emerald-400 hover:text-emerald-300">contact@fleetigo.com</a></p>
                                     <p><strong className="text-white">Téléphone :</strong> +33 1 23 45 67 89</p>
                                 </div>
                             </section>
@@ -63,7 +63,7 @@ export default function LegalNotice() {
                                 <div className="leading-relaxed space-y-2">
                                     <p><strong className="text-white">Nom :</strong> Jean Dupont</p>
                                     <p><strong className="text-white">Qualité :</strong> Président</p>
-                                    <p><strong className="text-white">Email :</strong> <a href="mailto:direction@delivery-saas.com" className="text-emerald-400 hover:text-emerald-300">direction@delivery-saas.com</a></p>
+                                    <p><strong className="text-white">Email :</strong> <a href="mailto:direction@fleetigo.com" className="text-emerald-400 hover:text-emerald-300">direction@fleetigo.com</a></p>
                                 </div>
                             </section>
 
@@ -80,10 +80,10 @@ export default function LegalNotice() {
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-4">4. Propriété Intellectuelle</h2>
                                 <p className="leading-relaxed mb-4">
-                                    L'ensemble du contenu de ce site (structure, textes, logos, images, vidéos, etc.) est la propriété exclusive de Delivery SaaS SAS ou de ses partenaires. Toute reproduction, distribution, modification, adaptation, retransmission ou publication de ces différents éléments est strictement interdite sans l'accord écrit de Delivery SaaS SAS.
+                                    L'ensemble du contenu de ce site (structure, textes, logos, images, vidéos, etc.) est la propriété exclusive de Fleetigo SAS ou de ses partenaires. Toute reproduction, distribution, modification, adaptation, retransmission ou publication de ces différents éléments est strictement interdite sans l'accord écrit de Fleetigo SAS.
                                 </p>
                                 <p className="leading-relaxed">
-                                    Les marques et logos affichés sur le site sont des marques déposées de Delivery SaaS SAS ou de sociétés tierces. Toute utilisation non autorisée de ces marques est interdite.
+                                    Les marques et logos affichés sur le site sont des marques déposées de Fleetigo SAS ou de sociétés tierces. Toute utilisation non autorisée de ces marques est interdite.
                                 </p>
                             </section>
 
@@ -96,8 +96,8 @@ export default function LegalNotice() {
                                     Pour exercer ces droits, vous pouvez contacter notre Délégué à la Protection des Données (DPO) :
                                 </p>
                                 <ul className="space-y-2 list-disc list-inside">
-                                    <li><strong className="text-white">Email :</strong> <a href="mailto:dpo@delivery-saas.com" className="text-emerald-400 hover:text-emerald-300">dpo@delivery-saas.com</a></li>
-                                    <li><strong className="text-white">Courrier :</strong> DPO - Delivery SaaS, 123 Avenue de la République, 75011 Paris</li>
+                                    <li><strong className="text-white">Email :</strong> <a href="mailto:dpo@fleetigo.com" className="text-emerald-400 hover:text-emerald-300">dpo@fleetigo.com</a></li>
+                                    <li><strong className="text-white">Courrier :</strong> DPO - Fleetigo, 123 Avenue de la République, 75011 Paris</li>
                                 </ul>
                                 <p className="leading-relaxed mt-4">
                                     Pour plus d'informations, consultez notre <Link href="/privacy-policy" className="text-emerald-400 hover:text-emerald-300">Politique de Confidentialité</Link>.
@@ -114,17 +114,17 @@ export default function LegalNotice() {
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-4">7. Responsabilité</h2>
                                 <p className="leading-relaxed mb-4">
-                                    Delivery SaaS SAS s'efforce d'assurer l'exactitude et la mise à jour des informations diffusées sur ce site. Toutefois, elle ne peut garantir l'exactitude, la précision ou l'exhaustivité des informations mises à disposition sur ce site.
+                                    Fleetigo SAS s'efforce d'assurer l'exactitude et la mise à jour des informations diffusées sur ce site. Toutefois, elle ne peut garantir l'exactitude, la précision ou l'exhaustivité des informations mises à disposition sur ce site.
                                 </p>
                                 <p className="leading-relaxed">
-                                    Delivery SaaS SAS décline toute responsabilité pour tout dommage direct ou indirect pouvant résulter de l'accès au site ou de l'utilisation du site et de ses informations.
+                                    Fleetigo SAS décline toute responsabilité pour tout dommage direct ou indirect pouvant résulter de l'accès au site ou de l'utilisation du site et de ses informations.
                                 </p>
                             </section>
 
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-4">8. Liens Hypertextes</h2>
                                 <p className="leading-relaxed">
-                                    Le site peut contenir des liens hypertextes vers d'autres sites. Delivery SaaS SAS n'exerce aucun contrôle sur ces sites et décline toute responsabilité quant à leur contenu.
+                                    Le site peut contenir des liens hypertextes vers d'autres sites. Fleetigo SAS n'exerce aucun contrôle sur ces sites et décline toute responsabilité quant à leur contenu.
                                 </p>
                             </section>
 
@@ -168,7 +168,7 @@ export default function LegalNotice() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
                                     </div>
-                                    <span className="text-xl font-bold text-white">Delivery SaaS</span>
+                                    <span className="text-xl font-bold text-white">Fleetigo</span>
                                 </div>
                                 <p className="text-slate-400 mb-6 max-w-md">
                                     La solution complète de gestion de livraisons pour optimiser vos tournées, 
@@ -232,7 +232,7 @@ export default function LegalNotice() {
 
                         {/* Copyright */}
                         <div className="mt-12 pt-8 border-t border-white/10 text-center text-sm text-slate-400">
-                            © 2026 Delivery SaaS. Tous droits réservés.
+                            © 2026 Fleetigo. Tous droits réservés.
                         </div>
                     </div>
                 </footer>

@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'has-company' => \App\Http\Middleware\EnsureUserHasCompany::class,
             'company-slug' => \App\Http\Middleware\SetCompanyFromSlug::class,
             'can' => \App\Http\Middleware\CheckPermission::class,
+            'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'module' => \App\Http\Middleware\CheckModuleAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

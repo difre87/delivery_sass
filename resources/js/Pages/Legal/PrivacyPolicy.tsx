@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
-                            <span className="text-lg font-bold text-white">Delivery SaaS</span>
+                            <span className="text-lg font-bold text-white">Fleetigo</span>
                         </Link>
 
                         <Link
@@ -46,19 +46,19 @@ export default function PrivacyPolicy() {
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
                                 <p className="leading-relaxed mb-4">
-                                    Delivery SaaS SAS (ci-après « nous », « notre » ou « la Société ») s'engage à protéger la confidentialité et la sécurité de vos données personnelles. Cette Politique de Confidentialité explique comment nous collectons, utilisons, stockons et protégeons vos informations personnelles conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés.
+                                    Fleetigo SAS (ci-après « nous », « notre » ou « la Société ») s'engage à protéger la confidentialité et la sécurité de vos données personnelles. Cette Politique de Confidentialité explique comment nous collectons, utilisons, stockons et protégeons vos informations personnelles conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés.
                                 </p>
                                 <p className="leading-relaxed">
-                                    En utilisant notre plateforme Delivery SaaS, vous acceptez les pratiques décrites dans cette politique.
+                                    En utilisant notre plateforme Fleetigo, vous acceptez les pratiques décrites dans cette politique.
                                 </p>
                             </section>
 
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-4">2. Responsable du Traitement</h2>
                                 <div className="leading-relaxed space-y-2">
-                                    <p><strong className="text-white">Delivery SaaS SAS</strong></p>
+                                    <p><strong className="text-white">Fleetigo SAS</strong></p>
                                     <p>123 Avenue de la République, 75011 Paris, France</p>
-                                    <p>Email : <a href="mailto:dpo@delivery-saas.com" className="text-emerald-400 hover:text-emerald-300">dpo@delivery-saas.com</a></p>
+                                    <p>Email : <a href="mailto:dpo@fleetigo.com" className="text-emerald-400 hover:text-emerald-300">dpo@fleetigo.com</a></p>
                                     <p>SIRET : 123 456 789 00012</p>
                                 </div>
                             </section>
@@ -272,8 +272,8 @@ export default function PrivacyPolicy() {
                                 </p>
                                 <div className="leading-relaxed space-y-2">
                                     <p><strong className="text-white">Délégué à la Protection des Données (DPO)</strong></p>
-                                    <p>Email : <a href="mailto:dpo@delivery-saas.com" className="text-emerald-400 hover:text-emerald-300">dpo@delivery-saas.com</a></p>
-                                    <p>Courrier : DPO - Delivery SaaS SAS, 123 Avenue de la République, 75011 Paris, France</p>
+                                    <p>Email : <a href="mailto:dpo@fleetigo.com" className="text-emerald-400 hover:text-emerald-300">dpo@fleetigo.com</a></p>
+                                    <p>Courrier : DPO - Fleetigo SAS, 123 Avenue de la République, 75011 Paris, France</p>
                                     <p>Téléphone : +33 1 23 45 67 89</p>
                                 </div>
                                 <p className="leading-relaxed mt-4">
@@ -296,7 +296,7 @@ export default function PrivacyPolicy() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
                                     </div>
-                                    <span className="text-xl font-bold text-white">Delivery SaaS</span>
+                                    <span className="text-xl font-bold text-white">Fleetigo</span>
                                 </div>
                                 <p className="text-slate-400 mb-6 max-w-md">
                                     La solution complète de gestion de livraisons pour optimiser vos tournées, 
@@ -360,7 +360,7 @@ export default function PrivacyPolicy() {
 
                         {/* Copyright */}
                         <div className="mt-12 pt-8 border-t border-white/10 text-center text-sm text-slate-400">
-                            © 2026 Delivery SaaS. Tous droits réservés.
+                            © 2026 Fleetigo. Tous droits réservés.
                         </div>
                     </div>
                 </footer>

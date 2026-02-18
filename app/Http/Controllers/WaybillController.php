@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AutoAssignsBranch;
 use App\Models\Waybill;
 use App\Models\WaybillItem;
 use App\Models\DispatchRun;
 use App\Models\Driver;
 use App\Models\Vehicle;
 use App\Models\Shipment;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -17,11 +19,15 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class WaybillController extends Controller
 {
+    use AutoAssignsBranch, LogsActivity;
+
     public function index(Request $request): Response
     {
         $company = $request->user()->currentCompany;
+        $currentBranchId = $request->user()->current_branch_id;
 
         $waybills = Waybill::where('company_id', $company->id)
+            ->where('branch_id', $currentBranchId)
             ->with(['driver', 'vehicle', 'dispatchRun', 'items'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -38,10 +44,10 @@ class WaybillController extends Controller
             ->paginate(15);
 
         $stats = [
-            'total' => Waybill::where('company_id', $company->id)->count(),
-            'in_progress' => Waybill::where('company_id', $company->id)->where('status', 'in_progress')->count(),
-            'completed' => Waybill::where('company_id', $company->id)->where('status', 'completed')->count(),
-            'total_shipments' => Waybill::where('company_id', $company->id)->sum('total_shipments'),
+            'total' => Waybill::where('company_id', $company->id)->where('branch_id', $currentBranchId)->count(),
+            'in_progress' => Waybill::where('company_id', $company->id)->where('branch_id', $currentBranchId)->where('status', 'in_progress')->count(),
+            'completed' => Waybill::where('company_id', $company->id)->where('branch_id', $currentBranchId)->where('status', 'completed')->count(),
+            'total_shipments' => Waybill::where('company_id', $company->id)->where('branch_id', $currentBranchId)->sum('total_shipments'),
         ];
 
         return Inertia::render('Waybills/Index', [
@@ -108,16 +114,17 @@ class WaybillController extends Controller
         ]);
 
         $waybill = Waybill::create([
-            'company_id' => $company->id,
-            'dispatch_run_id' => $validated['dispatch_run_id'] ?? null,
-            'driver_id' => $validated['driver_id'],
-            'vehicle_id' => $validated['vehicle_id'],
-            'number' => Waybill::generateWaybillNumber($company),
-            'date' => $validated['date'],
-            'departure_time' => $validated['departure_time'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-            'status' => 'draft',
-            'qr_token' => \Str::random(32),
+            ...$this->withCompanyAndBranch([
+                'dispatch_run_id' => $validated['dispatch_run_id'] ?? null,
+                'driver_id' => $validated['driver_id'],
+                'vehicle_id' => $validated['vehicle_id'],
+                'number' => Waybill::generateWaybillNumber($company),
+                'date' => $validated['date'],
+                'departure_time' => $validated['departure_time'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'draft',
+                'qr_token' => \Str::random(32),
+            ], $request),
         ]);
 
         foreach ($validated['shipments'] as $shipmentData) {
@@ -130,6 +137,8 @@ class WaybillController extends Controller
         }
 
         $waybill->updateTotalShipments();
+
+        static::logCreated('waybills', $waybill, "Création du bordereau {$waybill->number} avec {$waybill->total_shipments} livraisons");
 
         $company = $request->user()->currentCompany;
         return redirect()->route('waybills.show', ['company' => $company->slug, 'waybillId' => $waybill->id])
@@ -172,11 +181,17 @@ class WaybillController extends Controller
             'return_time' => ['nullable', 'date_format:H:i'],
         ]);
 
+        $oldValues = $waybill->only(['status', 'notes', 'return_time']);
+
         $waybill->update($validated);
 
         if ($validated['status'] === 'issued' && $waybill->status !== 'issued') {
             $waybill->markAsIssued();
         }
+
+        $newValues = $waybill->only(['status', 'notes', 'return_time']);
+
+        static::logUpdated('waybills', $waybill, $oldValues, $newValues, "Modification du bordereau {$waybill->number}");
 
         return back()->with('success', 'Bordereau mis à jour avec succès.');
     }
@@ -189,7 +204,10 @@ class WaybillController extends Controller
             ->where('id', $waybillId)
             ->firstOrFail();
         
+        $waybillNumber = $waybill->number;
         $waybill->delete();
+
+        static::logDeleted('waybills', $waybill, "Suppression du bordereau {$waybillNumber}");
 
         return redirect()->route('waybills.index', ['company' => $company->slug])
             ->with('success', 'Bordereau supprimé avec succès.');

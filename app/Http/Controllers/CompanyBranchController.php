@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Traits\LogsActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,6 +11,8 @@ use Inertia\Response;
 
 class CompanyBranchController extends Controller
 {
+    use LogsActivity;
+
     public function index(Request $request): Response
     {
         $company = $request->user()->currentCompany;
@@ -19,14 +22,17 @@ class CompanyBranchController extends Controller
         $branches = Branch::query()
             ->forCompany($company->id)
             ->withCount(['shipments', 'users'])
+            ->orderBy('is_active', 'desc')
             ->orderBy('name')
             ->get();
+
+        $activeBranchesCount = $branches->where('is_active', true)->count();
 
         $canAddMore = true;
         $limitReached = false;
         
         if ($plan && $plan->max_branches !== null) {
-            $canAddMore = $branches->count() < $plan->max_branches;
+            $canAddMore = $activeBranchesCount < $plan->max_branches;
             $limitReached = !$canAddMore;
         }
 
@@ -38,7 +44,7 @@ class CompanyBranchController extends Controller
             ] : null,
             'canAddMore' => $canAddMore,
             'limitReached' => $limitReached,
-            'currentCount' => $branches->count(),
+            'currentCount' => $activeBranchesCount,
         ]);
     }
 
@@ -73,6 +79,8 @@ class CompanyBranchController extends Controller
         // Assigner automatiquement l'utilisateur actuel à la nouvelle agence
         $request->user()->branches()->attach($branch->id, ['is_default' => false]);
 
+        static::logCreated('branches', $branch, "Création de l'agence {$branch->name}");
+
         return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence créée avec succès.');
     }
 
@@ -90,7 +98,13 @@ class CompanyBranchController extends Controller
             'country' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $oldValues = $branch->only(['name', 'address', 'city', 'country']);
+
         $branch->update($validated);
+
+        $newValues = $branch->only(['name', 'address', 'city', 'country']);
+
+        static::logUpdated('branches', $branch, $oldValues, $newValues, "Modification de l'agence {$branch->name}");
 
         return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence mise à jour.');
     }
@@ -100,28 +114,49 @@ class CompanyBranchController extends Controller
         $branch = Branch::findOrFail($branchId);
         $this->ensureBranchBelongsToCurrentCompany($request, $branch);
 
-        // Vérifier qu'il reste au moins une agence
+        // Vérifier qu'il reste au moins une agence active
         $company = $request->user()->currentCompany;
-        $branchCount = Branch::forCompany($company->id)->count();
+        $activeBranchCount = Branch::forCompany($company->id)->where('is_active', true)->count();
         
-        if ($branchCount <= 1) {
+        if ($activeBranchCount <= 1) {
             return redirect()->route('settings.branches', ['company' => $company->slug])
-                ->withErrors(['delete' => 'Impossible de supprimer la dernière agence.']);
+                ->withErrors(['delete' => 'Impossible de désactiver la dernière agence active.']);
         }
 
-        if ($branch->shipments()->count() > 0) {
-            return redirect()->route('settings.branches', ['company' => $company->slug])
-                ->withErrors(['delete' => 'Impossible de supprimer une agence qui a des livraisons associées.']);
+        // Soft delete: désactiver au lieu de supprimer
+        $branchName = $branch->name;
+        $branch->update(['is_active' => false]);
+
+        static::logDeleted('branches', $branch, "Désactivation de l'agence {$branchName}");
+
+        return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence désactivée avec succès.');
+    }
+
+    public function restore(Request $request, string $company, string $branchId): RedirectResponse
+    {
+        $branch = Branch::findOrFail($branchId);
+        $this->ensureBranchBelongsToCurrentCompany($request, $branch);
+
+        $company = $request->user()->currentCompany;
+        $subscription = $company->subscription;
+        $plan = $subscription?->plan;
+
+        // Vérifier la limite du plan pour les agences actives
+        if ($plan && $plan->max_branches !== null) {
+            $activeBranchCount = Branch::forCompany($company->id)->where('is_active', true)->count();
+            if ($activeBranchCount >= $plan->max_branches) {
+                return redirect()->back()->withErrors([
+                    'limit' => "Limite d'agences actives atteinte pour votre plan ({$plan->name}). Mettez à niveau pour réactiver plus d'agences."
+                ]);
+            }
         }
 
-        if ($branch->users()->count() > 0) {
-            return redirect()->route('settings.branches', ['company' => $company->slug])
-                ->withErrors(['delete' => 'Impossible de supprimer une agence qui a des utilisateurs assignés. Réassignez-les d\'abord.']);
-        }
+        $branchName = $branch->name;
+        $branch->update(['is_active' => true]);
 
-        $branch->delete();
+        static::logCustomAction('reactivated', 'branches', "Réactivation de l'agence {$branchName}", $branch, null);
 
-        return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence supprimée.');
+        return redirect()->route('settings.branches', ['company' => $company->slug])->with('status', 'Agence réactivée avec succès.');
     }
 
     private function ensureBranchBelongsToCurrentCompany(Request $request, Branch $branch): void

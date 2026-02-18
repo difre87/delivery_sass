@@ -18,6 +18,9 @@ interface Plan {
 interface WelcomeProps {
     auth: {
         user: any;
+        currentCompany?: {
+            slug: string;
+        };
     };
     canLogin?: boolean;
     canRegister?: boolean;
@@ -35,7 +38,7 @@ export default function Welcome({ auth, plans = [] }: WelcomeProps) {
 
     return (
         <>
-            <Head title="Delivery SaaS" />
+            <Head title="Fleetigo - Solution de Gestion de Flotte et de Livraison" />
 
             <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
                 {/* Background decoration */}
@@ -54,7 +57,7 @@ export default function Welcome({ auth, plans = [] }: WelcomeProps) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
-                            <span className="text-lg font-bold text-white">Delivery SaaS</span>
+                            <span className="text-lg font-bold text-white">Fleetigo</span>
                         </div>
 
                         {/* Navigation Menu */}
@@ -82,7 +85,7 @@ export default function Welcome({ auth, plans = [] }: WelcomeProps) {
                         <div className="flex items-center gap-4">
                             {auth.user ? (
                                 <Link
-                                    href={route('dashboard')}
+                                    href={auth.currentCompany ? route('dashboard', { company: auth.currentCompany.slug }) : '/admin/dashboard'}
                                     className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
                                 >
                                     Dashboard
@@ -162,7 +165,7 @@ export default function Welcome({ auth, plans = [] }: WelcomeProps) {
                             <div className="mt-10 flex flex-wrap gap-4">
                                 {auth.user ? (
                                     <Link
-                                        href={route('dashboard')}
+                                        href={auth.currentCompany ? route('dashboard', { company: auth.currentCompany.slug }) : '/admin/dashboard'}
                                         className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105"
                                     >
                                         <span>Accéder au dashboard</span>
@@ -530,7 +533,7 @@ export default function Welcome({ auth, plans = [] }: WelcomeProps) {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
                                     </div>
-                                    <span className="text-xl font-bold text-white">Delivery SaaS</span>
+                                    <span className="text-xl font-bold text-white">Fleetigo</span>
                                 </div>
                                 <p className="text-slate-400 mb-6 max-w-md">
                                     La solution complète de gestion de livraisons pour optimiser vos tournées, 
@@ -594,7 +597,7 @@ export default function Welcome({ auth, plans = [] }: WelcomeProps) {
 
                         {/* Copyright */}
                         <div className="mt-12 pt-8 border-t border-white/10 text-center text-sm text-slate-400">
-                            © 2026 Delivery SaaS. Tous droits réservés.
+                            © 2026 Fleetigo. Tous droits réservés.
                         </div>
                     </div>
                 </footer>
