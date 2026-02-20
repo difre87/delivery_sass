@@ -17,6 +17,7 @@ class Waybill extends Model
      */
     protected $fillable = [
         'company_id',
+        'branch_id',
         'dispatch_run_id',
         'driver_id',
         'vehicle_id',
@@ -61,6 +62,14 @@ class Waybill extends Model
     public function dispatchRun(): BelongsTo
     {
         return $this->belongsTo(DispatchRun::class);
+    }
+
+    /**
+     * @return BelongsTo<Branch, $this>
+     */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     /**

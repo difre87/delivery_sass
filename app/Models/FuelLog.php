@@ -16,6 +16,7 @@ class FuelLog extends Model
      */
     protected $fillable = [
         'company_id',
+        'branch_id',
         'vehicle_id',
         'driver_id',
         'delivery_route_id',
@@ -48,6 +49,14 @@ class FuelLog extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    /**
+     * @return BelongsTo<Branch, $this>
+     */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     /**
