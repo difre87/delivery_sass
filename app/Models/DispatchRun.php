@@ -22,6 +22,9 @@ class DispatchRun extends Model
         'vehicle_id',
         'date',
         'status',
+        'start_time',
+        'end_time',
+        'recurring_dispatch_run_id',
     ];
 
     /**
@@ -64,5 +67,13 @@ class DispatchRun extends Model
     public function shipments(): BelongsToMany
     {
         return $this->belongsToMany(Shipment::class, 'dispatch_run_shipments');
+    }
+
+    /**
+     * @return BelongsTo<RecurringDispatchRun, $this>
+     */
+    public function recurringDispatchRun(): BelongsTo
+    {
+        return $this->belongsTo(RecurringDispatchRun::class);
     }
 }

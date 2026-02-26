@@ -87,7 +87,13 @@ export default function AuthenticatedLayout({ header, children }) {
         {
             name: 'Tournées',
             href: route('routes.index', { company: companySlug }),
-            active: route().current('routes.*'),
+            active: route().current('routes.index'),
+            icon: Icons.Routes,
+        },
+        {
+            name: 'Tournées Récurrentes',
+            href: route('routes.recurring.index', { company: companySlug }),
+            active: route().current('routes.recurring.*'),
             icon: Icons.Routes,
         },
         {

@@ -19,7 +19,15 @@ const statusOptions = [
     { value: 'completed', label: 'Terminée', color: 'emerald' },
 ];
 
-const initialForm = { 
+const initialCreateForm = { 
+    driver_id: '', 
+    vehicle_id: '', 
+    date: '', 
+    status: 'planned', 
+    shipment_ids: [] 
+};
+
+const initialEditForm = { 
     branch_id: '', 
     driver_id: '', 
     vehicle_id: '', 
@@ -41,8 +49,8 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [deletingRun, setDeletingRun] = useState(null);
     
-    const createForm = useForm(initialForm);
-    const editForm = useForm(initialForm);
+    const createForm = useForm(initialCreateForm);
+    const editForm = useForm(initialEditForm);
     
     const rows = runs?.data ?? [];
     const pagination = useMemo(() => runs?.links ?? [], [runs]);
@@ -270,17 +278,6 @@ export default function RoutesIndex({ runs, branches = [], vehicles = [], driver
                                             options={[
                                                 { value: '', label: 'Aucun véhicule' },
                                                 ...vehicles.map(v => ({ value: v.id, label: v.plate_number }))
-                                            ]}
-                                        />
-
-                                        <FormSelect
-                                            label="Agence"
-                                            value={createForm.data.branch_id}
-                                            onChange={(e) => createForm.setData('branch_id', e.target.value)}
-                                            error={createForm.errors.branch_id}
-                                            options={[
-                                                { value: '', label: 'Aucune agence' },
-                                                ...branches.map(b => ({ value: b.id, label: b.name }))
                                             ]}
                                         />
 

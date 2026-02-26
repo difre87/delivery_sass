@@ -22,19 +22,23 @@ class DashboardController extends Controller
         }
 
         $company = $request->user()->currentCompany;
+        $branchId = $request->user()->current_branch_id;
 
         $currentMonth = now()->startOfMonth();
 
         $stats = [
-            'clients' => $company->clients()->count(),
+            'clients' => $company->clients()->where('branch_id', $branchId)->count(),
             'shipments_open' => $company->shipments()
                 ->whereIn('status', ['draft', 'scheduled', 'assigned', 'in_transit'])
+                ->where('branch_id', $branchId)
                 ->count(),
             'routes_today' => $company->deliveryRoutes()
+                ->whereHas('driver', fn($query) => $query->where('branch_id', $branchId))
                 ->whereDate('route_date', now()->toDateString())
                 ->count(),
             'vehicles_active' => $company->vehicles()
                 ->where('status', 'active')
+                ->where('branch_id', $branchId)
                 ->count(),
         ];
 
@@ -42,26 +46,32 @@ class DashboardController extends Controller
             'delivered_month' => $company->shipments()
                 ->where('status', 'delivered')
                 ->where('delivered_at', '>=', $currentMonth)
+                ->where('branch_id', $branchId)
                 ->count(),
             'fuel_cost_month_cents' => (int) $company->fuelLogs()
                 ->where('filled_at', '>=', $currentMonth)
+                ->where('branch_id', $branchId)
                 ->sum('total_cents'),
             'revenue_month_cents' => (int) $company->shipments()
                 ->where('delivered_at', '>=', $currentMonth)
+                ->where('branch_id', $branchId)
                 ->sum('price_cents'),
             'cost_month_cents' => (int) $company->shipments()
                 ->where('delivered_at', '>=', $currentMonth)
+                ->where('branch_id', $branchId)
                 ->sum('cost_cents'),
         ];
 
         $recentShipments = Shipment::query()
             ->forCompany($company->id)
+            ->where('branch_id', $branchId)
             ->latest('id')
             ->limit(5)
             ->get(['id', 'reference', 'recipient_name', 'status', 'scheduled_for', 'delivered_at']);
 
         $recentFuelLogs = FuelLog::query()
             ->forCompany($company->id)
+            ->where('branch_id', $branchId)
             ->latest('filled_at')
             ->limit(5)
             ->get(['id', 'filled_at', 'volume_liters', 'total_cents', 'station_name']);

@@ -42,7 +42,7 @@ export default function DataTable({
                     <tbody className="divide-y divide-slate-100 bg-white">
                         {data.map((row, rowIndex) => (
                             <motion.tr
-                                key={rowIndex}
+                                key={row.id || rowIndex}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: rowIndex * 0.03 }}

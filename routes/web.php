@@ -142,6 +142,13 @@ Route::middleware('auth')->group(function () {
             Route::post('/routes', [DispatchRunController::class, 'store'])->name('routes.store');
             Route::patch('/routes/{dispatchRun}', [DispatchRunController::class, 'update'])->name('routes.update');
             Route::delete('/routes/{dispatchRun}', [DispatchRunController::class, 'destroy'])->name('routes.destroy');
+            
+            // Recurring Routes (Tournées Récurrentes)
+            Route::get('/routes/recurring', [\App\Http\Controllers\RecurringDispatchRunController::class, 'index'])->name('routes.recurring.index');
+            Route::post('/routes/recurring', [\App\Http\Controllers\RecurringDispatchRunController::class, 'store'])->name('routes.recurring.store');
+            Route::patch('/routes/recurring/{recurringDispatchRun}', [\App\Http\Controllers\RecurringDispatchRunController::class, 'update'])->name('routes.recurring.update');
+            Route::delete('/routes/recurring/{recurringDispatchRun}', [\App\Http\Controllers\RecurringDispatchRunController::class, 'destroy'])->name('routes.recurring.destroy');
+            Route::post('/routes/recurring/{recurringDispatchRun}/toggle', [\App\Http\Controllers\RecurringDispatchRunController::class, 'toggle'])->name('routes.recurring.toggle');
         });
         
         // Fleet - Manager+
